@@ -1,5 +1,7 @@
 #pragma once
 #include <string_view>
+#include <istream>
+
 #include "transport_catalogue.h"
 
 namespace tr_catalogue {
@@ -12,6 +14,6 @@ namespace tr_catalogue {
 
 		Bus ParseBusQuery(const TransportCatalogue& transport_catalogue, std::string_view route_info);
 
-		void ReadInput();
+		void InputReader(TransportCatalogue& transport_catalogue,std::istream&is);
 	}
 }

@@ -23,7 +23,6 @@ namespace tr_catalogue {
 		std::string name;
 		bool is_loop;
 		std::vector<const Stop*> route;
-		std::unordered_set<const Stop*> unique_stops;
 	};
 
 	struct BusStats {
@@ -34,24 +33,29 @@ namespace tr_catalogue {
 		double curvature = 0.0;
 	};
 
-	std::ostream& operator << (std::ostream& os, const BusStats& bus_stats);
+	namespace detail {
+		size_t GetUniqueStops(std::vector<const Stop*> stops);
+	}
+
 
 	class TransportCatalogue {
 	public:
 		using StopPair = std::pair<const Stop*, const Stop*>;
 		TransportCatalogue() = default;
 
-		void AddStop(const Stop stop);
+		// r-value reference так как надо перенести тяжелый объект, который образовался при считывании данных
+		// Либо нужно оставлять const Stop& stop, но тогда будет происходить копирование объекта, который не нужен вне справочника
+		void AddStop(Stop&& stop);
 		const Stop* FindStop(std::string_view stop_name) const;
 
-		void AddBus(const Bus bus);
+		void AddBus(Bus&& bus);
 		const Bus* FindBus(std::string_view bus_name) const;
 
 		BusStats GetBusStats(std::string_view bus_name) const;
 
 		const std::set<std::string_view>* StopAllBuses(std::string_view stop_name) const;
 
-		void AddStopPairsDistances(StopPair stop_pair, const int distance);
+		void AddStopPairsDistances(const Stop* from,const Stop* to, const int distance);
 
 		double ComputeGeoRouteLength(const Bus* bus) const;
 

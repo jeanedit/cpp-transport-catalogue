@@ -40,7 +40,7 @@ namespace tr_catalogue {
 				std::string_view stop_to = stop_info.substr(0, found_comma);
 				found_comma == stop_info.npos ? stop_info.remove_prefix(stop_info.size()) : stop_info.remove_prefix(found_comma + 2); // remove before next distance
 
-				transport_catalogue.AddStopPairsDistances(std::make_pair(transport_catalogue.FindStop(stop_name), transport_catalogue.FindStop(stop_to)), stoi(std::string(distance)));
+				transport_catalogue.AddStopPairsDistances(transport_catalogue.FindStop(stop_name), transport_catalogue.FindStop(stop_to), stoi(std::string(distance)));
 			}
 		}
 
@@ -58,18 +58,16 @@ namespace tr_catalogue {
 			while (!route_info.empty()) {
 				std::string_view stop = route_info.substr(0, route_info.find_first_of(route_separator) - 1);
 				bus.route.push_back(transport_catalogue.FindStop(stop));
-				bus.unique_stops.insert(transport_catalogue.FindStop(stop));
 				route_info.find_first_of(route_separator) == route_info.npos ? route_info.remove_prefix(stop.size()) : route_info.remove_prefix(stop.size() + 3);
 			}
 			return bus;
 		}
 
 
-		void ReadInput() {
-			TransportCatalogue transport_catalogue;
+		void InputReader(TransportCatalogue& transport_catalogue,std::istream& is) {
 			size_t db_data_count; // number of database data
-			std::cin >> db_data_count;
-			std::cin.ignore();
+			is >> db_data_count;
+			is.ignore();
 
 			std::string dataline;
 			std::vector<std::string> queries;
@@ -93,9 +91,6 @@ namespace tr_catalogue {
 				}
 
 			}
-
-			stat_handler::ParseStatsQuery(transport_catalogue);
-
 		}
 	}
 }

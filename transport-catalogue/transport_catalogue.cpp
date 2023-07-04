@@ -5,19 +5,19 @@
 #include <numeric>
 #include <functional>
 #include <iomanip>
+#include <algorithm>
 
 namespace tr_catalogue {
 
-	std::ostream& operator << (std::ostream& os, const BusStats& bus_stats) {
-		os << "Bus " << bus_stats.bus_name << ": "
-			<< bus_stats.stops << " stops on route, "
-			<< bus_stats.unique_stops << " unique stops, "
-			<< bus_stats.route_length << " route length, "
-			<< std::setprecision(6) << bus_stats.curvature << " curvature";
-		return os;
+	namespace detail {
+		size_t GetUniqueStops(std::vector<const Stop*> stops) {
+			std::sort(stops.begin(), stops.end(), [](const Stop* lhs, const Stop* rhs) { return lhs->name < rhs->name;});
+			auto last = std::unique(stops.begin(), stops.end(), [](const Stop* lhs, const Stop* rhs) { return lhs->name == rhs->name; });
+			return std::distance(stops.begin(),last);
+		}
 	}
 
-	void TransportCatalogue::AddStop(Stop stop) {
+	void TransportCatalogue::AddStop(Stop&& stop) {
 		stops_storage_.push_back(std::move(stop));
 		stops_[stops_storage_.back().name] = &stops_storage_.back();
 		stops_to_buses_[stops_storage_.back().name];
@@ -30,10 +30,10 @@ namespace tr_catalogue {
 		return nullptr;
 	}
 
-	void TransportCatalogue::AddBus(Bus bus) {
+	void TransportCatalogue::AddBus(Bus&& bus) {
 		buses_storage_.push_back(std::move(bus));
 		buses_[buses_storage_.back().name] = &buses_storage_.back();
-		for (const auto& stop : buses_storage_.back().unique_stops) {
+		for (const auto& stop : buses_storage_.back().route) {
 			stops_to_buses_.at(stop->name).insert(buses_storage_.back().name);
 		}
 	}
@@ -82,6 +82,8 @@ namespace tr_catalogue {
 	}
 
 
+
+
 	BusStats TransportCatalogue::GetBusStats(std::string_view bus_name) const {
 		BusStats bus_stats;
 		const Bus* bus = FindBus(bus_name);
@@ -90,7 +92,7 @@ namespace tr_catalogue {
 		}
 		bus_stats.bus_name = bus->name;
 		bus_stats.stops = bus->is_loop ? bus->route.size() : bus->route.size() * 2 - 1;
-		bus_stats.unique_stops = bus->unique_stops.size();
+		bus_stats.unique_stops = detail::GetUniqueStops(bus->route);
 
 		bus_stats.route_length = ComputeActualRouteLength(bus);
 		bus_stats.curvature = static_cast<double>(ComputeActualRouteLength(bus)) / ComputeGeoRouteLength(bus);
@@ -104,7 +106,7 @@ namespace tr_catalogue {
 		return nullptr;
 	}
 
-	void TransportCatalogue::AddStopPairsDistances(StopPair stop_pair, const int distance) {
-		stop_pairs_distances_[stop_pair] = distance;
+	void TransportCatalogue::AddStopPairsDistances(const Stop* from,const Stop* to, const int distance) {
+		stop_pairs_distances_[std::make_pair(from,to)] = distance;
 	}
 }
