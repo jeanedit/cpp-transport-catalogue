@@ -58,7 +58,6 @@ namespace tr_catalogue {
             std::ostringstream ostr;
             render_doc.Render(ostr);
 
-            //ostr << os.rdbuf();
             std::string svg = ostr.str();
             map_response.emplace("map"s,std::move(svg));
             map_response.emplace("request_id"s,request_id);
