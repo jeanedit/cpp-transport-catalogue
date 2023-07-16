@@ -1,11 +1,15 @@
 #include <iostream>
-#include "input_reader.h"
-#include "stat_reader.h"
+#include "json_reader.h"
 #include "transport_catalogue.h"
+#include "map_renderer.h"
 
 
 int main() {
 	tr_catalogue::TransportCatalogue transport_catalogue;
-	tr_catalogue::input_handler::InputReader(transport_catalogue,std::cin);
-	tr_catalogue::stat_handler::StatsReader(transport_catalogue,std::cin);
+	tr_catalogue::json_reader::JsonReader jr(transport_catalogue,std::cin);
+    jr.ReadJson();
+    renderer::MapRenderer mr = jr.MapRenderFromJson();
+    tr_catalogue::RequestHandler rq(transport_catalogue,mr);
+    jr.ResponseRequests(std::cout,rq);
+    //rq.RenderMap().Render(std::cout);
 }

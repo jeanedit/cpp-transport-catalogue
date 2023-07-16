@@ -6,16 +6,9 @@
 #include <functional>
 #include <iomanip>
 #include <algorithm>
-
+using namespace domain;
 namespace tr_catalogue {
 
-	namespace detail {
-		size_t GetUniqueStops(std::vector<const Stop*> stops) {
-			std::sort(stops.begin(), stops.end(), [](const Stop* lhs, const Stop* rhs) { return lhs->name < rhs->name;});
-			auto last = std::unique(stops.begin(), stops.end(), [](const Stop* lhs, const Stop* rhs) { return lhs->name == rhs->name; });
-			return std::distance(stops.begin(),last);
-		}
-	}
 
 	void TransportCatalogue::AddStop(Stop&& stop) {
 		stops_storage_.push_back(std::move(stop));
@@ -54,7 +47,24 @@ namespace tr_catalogue {
 
 		return bus->is_loop ? length : length * 2;
 	}
+    
+    const std::unordered_map<std::string_view, std::set<std::string_view>>& TransportCatalogue::StopToBuses() const{
+        return stops_to_buses_;
+    }
 
+     const std::deque<const Stop*> TransportCatalogue::StopsWithBus() const{
+         std::deque<const Stop*> stops_with_buses;
+         for(const auto&[stop_name,bus_set]:stops_to_buses_){
+             if(!bus_set.empty()){
+                 stops_with_buses.push_back(FindStop(stop_name));
+             }
+         }
+        std::sort(stops_with_buses.begin(),stops_with_buses.end(),[](const domain::Stop* lhs, const domain::Stop* rhs){
+                return lhs->name < rhs->name;
+            });
+         return stops_with_buses;
+     }
+    
 	size_t TransportCatalogue::ComputeActualRouteLength(const Bus* bus) const {
 		size_t length = std::transform_reduce(bus->route.begin(), std::prev(bus->route.end()), std::next(bus->route.begin()), 0, std::plus{},
 			[this](const Stop* from, const Stop* to) {
@@ -81,30 +91,6 @@ namespace tr_catalogue {
 		return length;
 	}
 
-
-
-
-	BusStats TransportCatalogue::GetBusStats(std::string_view bus_name) const {
-		BusStats bus_stats;
-		const Bus* bus = FindBus(bus_name);
-		if (bus == nullptr) {
-			return bus_stats;
-		}
-		bus_stats.bus_name = bus->name;
-		bus_stats.stops = bus->is_loop ? bus->route.size() : bus->route.size() * 2 - 1;
-		bus_stats.unique_stops = detail::GetUniqueStops(bus->route);
-
-		bus_stats.route_length = ComputeActualRouteLength(bus);
-		bus_stats.curvature = static_cast<double>(ComputeActualRouteLength(bus)) / ComputeGeoRouteLength(bus);
-		return bus_stats;
-	}
-
-	const std::set<std::string_view>* TransportCatalogue::StopAllBuses(std::string_view stop_name) const {
-		if (stops_to_buses_.count(stop_name)) {
-			return &stops_to_buses_.at(stop_name);
-		}
-		return nullptr;
-	}
 
 	void TransportCatalogue::AddStopPairsDistances(const Stop* from,const Stop* to, const int distance) {
 		stop_pairs_distances_[std::make_pair(from,to)] = distance;
