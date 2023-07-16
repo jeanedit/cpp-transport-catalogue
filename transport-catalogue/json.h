@@ -9,7 +9,7 @@
 namespace json {
 
 class Node;
-// Сохраните объявления Dict и Array без изменения
+
 using Dict = std::map<std::string, Node>;
 using Array = std::vector<Node>;
 
@@ -21,7 +21,7 @@ public:
 
 class Node {
 public:
-   /* Реализуйте Node, используя std::variant */
+
     using Value = std::variant<std::nullptr_t,Array,Dict,bool,int,double, std::string>;
     
     template<typename T>
