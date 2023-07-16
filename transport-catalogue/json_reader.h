@@ -8,7 +8,7 @@
 #include "request_handler.h"
 #include "json.h"
 
-//class RequestHandler;
+
 
 namespace tr_catalogue {
 	namespace json_reader {
