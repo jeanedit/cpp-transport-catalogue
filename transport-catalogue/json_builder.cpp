@@ -3,7 +3,7 @@
 namespace json{
 
         KeyItemContext BaseContext::Key(std::string key){
-            return builder_.Key(key);
+            return builder_.Key(std::move(key));
         }
         DictItemContext BaseContext::StartDict(){
             return builder_.StartDict();
@@ -19,13 +19,13 @@ namespace json{
             return builder_.EndArray();
         }
         Builder& BaseContext::Value(Node::Value val){
-            return builder_.Value(val);
+            return builder_.Value(std::move(val));
         }
         ValueKeyContext KeyItemContext::Value(Node::Value val){
-            return BaseContext::Value(val);
+            return BaseContext::Value(std::move(val));
         }
        ArrayItemContext ArrayItemContext::Value(Node::Value val){
-            return BaseContext::Value(val);
+            return BaseContext::Value(std::move(val));
         }
     
         KeyItemContext Builder::Key(std::string key){
@@ -39,10 +39,10 @@ namespace json{
     
           Builder& Builder::Value(Node::Value val){
                 if(root_.IsNull()){
-                    root_.GetValue() = val;
+                    root_.GetValue() = std::move(val);
                 }
                 else if(!nodes_stack_.empty() && nodes_stack_.back()->IsNull()){
-                    nodes_stack_.back()->GetValue() = val;
+                    nodes_stack_.back()->GetValue() = std::move(val);
                     Node* val_ptr =  nodes_stack_.back();
                     nodes_stack_.pop_back();
                     AddNode(val_ptr);
