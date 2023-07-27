@@ -8,7 +8,6 @@
 namespace tr_catalogue {
 class RequestHandler {
 public:
-    // MapRenderer понадобится в следующей части итогового проекта
     RequestHandler(const TransportCatalogue& db, const renderer::MapRenderer& renderer):db_(db),renderer_(renderer){}
 
     // Возвращает информацию о маршруте (запрос Bus)
@@ -17,7 +16,7 @@ public:
     // Возвращает маршруты, проходящие через
     const std::set<std::string_view>* GetBusesByStop(const std::string_view& stop_name) const;
 
-    // Этот метод будет нужен в следующей части итогового проекта
+    // Возвращает svg документ, содержащий карту маршрутов и остановок
     svg::Document RenderMap() const;
 
 private:
