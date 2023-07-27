@@ -166,8 +166,7 @@ Node LoadString(std::istream& input) {
         ++it;
     }
 
-    return Node{std::move(s)}
-    ;
+    return Node{std::move(s)};
 }
 Node LoadArray(istream& input) {
     Array result;
@@ -244,6 +243,10 @@ Node LoadNode(istream& input) {
 
 const Node::Value& Node::GetValue() const{
     return value_;
+}   
+    
+Node::Value& Node::GetValue(){
+    return value_;
 }
 
 bool Node::IsInt() const{
@@ -316,6 +319,7 @@ const Dict& Node::AsMap() const{
     }
     throw std::logic_error("wrong type");
 } 
+
     
 Document::Document(Node root)
     : root_(move(root)) {
@@ -325,93 +329,129 @@ const Node& Document::GetRoot() const {
     return root_;
 }
 
-Document Load(istream& input) {
+    
+struct PrintContext {
+    std::ostream& out;
+    int indent_step = 4;
+    int indent = 0;
+
+    void PrintIndent() const {
+        for (int i = 0; i < indent; ++i) {
+            out.put(' ');
+        }
+    }
+
+    PrintContext Indented() const {
+        return {out, indent_step, indent_step + indent};
+    }
+};
+
+void PrintNode(const Node& value, const PrintContext& ctx);
+
+template <typename Value>
+void PrintValue(const Value& value, const PrintContext& ctx) {
+    ctx.out << value;
+}
+
+void PrintString(const std::string& value, std::ostream& out) {
+    out.put('"');
+    for (const char c : value) {
+        switch (c) {
+            case '\r':
+                out << "\\r"sv;
+                break;
+            case '\n':
+                out << "\\n"sv;
+                break;
+            case '"':
+                // Символы " и \ выводятся как \" или \\, соответственно
+                [[fallthrough]];
+            case '\\':
+                out.put('\\');
+                [[fallthrough]];
+            default:
+                out.put(c);
+                break;
+        }
+    }
+    out.put('"');
+}
+
+template <>
+void PrintValue<std::string>(const std::string& value, const PrintContext& ctx) {
+    PrintString(value, ctx.out);
+}
+
+template <>
+void PrintValue<std::nullptr_t>(const std::nullptr_t&, const PrintContext& ctx) {
+    ctx.out << "null"sv;
+}
+
+// В специализаци шаблона PrintValue для типа bool параметр value передаётся
+// по константной ссылке, как и в основном шаблоне.
+// В качестве альтернативы можно использовать перегрузку:
+// void PrintValue(bool value, const PrintContext& ctx);
+template <>
+void PrintValue<bool>(const bool& value, const PrintContext& ctx) {
+    ctx.out << (value ? "true"sv : "false"sv);
+}
+
+template <>
+void PrintValue<Array>(const Array& nodes, const PrintContext& ctx) {
+    std::ostream& out = ctx.out;
+    out << "[\n"sv;
+    bool first = true;
+    auto inner_ctx = ctx.Indented();
+    for (const Node& node : nodes) {
+        if (first) {
+            first = false;
+        } else {
+            out << ",\n"sv;
+        }
+        inner_ctx.PrintIndent();
+        PrintNode(node, inner_ctx);
+    }
+    out.put('\n');
+    ctx.PrintIndent();
+    out.put(']');
+}
+
+template <>
+void PrintValue<Dict>(const Dict& nodes, const PrintContext& ctx) {
+    std::ostream& out = ctx.out;
+    out << "{\n"sv;
+    bool first = true;
+    auto inner_ctx = ctx.Indented();
+    for (const auto& [key, node] : nodes) {
+        if (first) {
+            first = false;
+        } else {
+            out << ",\n"sv;
+        }
+        inner_ctx.PrintIndent();
+        PrintString(key, ctx.out);
+        out << ": "sv;
+        PrintNode(node, inner_ctx);
+    }
+    out.put('\n');
+    ctx.PrintIndent();
+    out.put('}');
+}
+
+void PrintNode(const Node& node, const PrintContext& ctx) {
+    std::visit(
+        [&ctx](const auto& value) {
+            PrintValue(value, ctx);
+        },
+        node.GetValue());
+}
+
+Document Load(std::istream& input) {
     return Document{LoadNode(input)};
 }
-    
-// Шаблон, подходящий для вывода double и int
-template <typename Value>
-void PrintValue(const Value& value, std::ostream& out) {
-    out << value;
-}
-
-// Перегрузка функции PrintValue для вывода значений null
-void PrintValue(std::nullptr_t, std::ostream& out) {
-    out << "null"sv;
-}
-
-void PrintValue(bool val, std::ostream& out) {
-    val ? out << "true"sv : out << "false"sv;
-}
-
-void PrintValue(const std::string& str, std::ostream& out) {
-    out<<'"';
-    for(const char c: str){
-        switch (c) {
-        case '\n':
-            out<<"\\n"s;
-            break;
-        case '\t':
-            out<<'\t';
-            break;
-        case '\r':
-           out<<"\\r"s;
-            break;
-        case '\\':
-            out<<"\\\\"s;
-            break;
-        case '"':
-            out<<"\\\""s;
-            break;
-        default:
-            out<<c;
-            break;
-         }
-    }
-    out<<'"';
-}
-void PrintNode(const Node& node, std::ostream& out);
-    
-// Другие перегрузки функции PrintValue пишутся аналогично
-    
-void PrintValue(const Array& arr,std::ostream& out){
-    int count = 0;
-    out<<'[';
-    for(const auto& a:arr){
-        if(count++ != 0){
-             out<<',';
-        }
-        
-       PrintNode(a,out);  
-    }
-    out<<']';
-}
-    
-void PrintValue(const Dict& dict,std::ostream& out){
-    out<<'{';
-    size_t count = 0;
-    for(const auto& [key,val]:dict){
-        PrintNode(key,out);
-        out<<':';
-        PrintNode(val,out);
-        ++count;
-        if(count != dict.size()){
-            out<<',';  
-        }
-
-    }
-    out<<'}';
-}
-void PrintNode(const Node& node, std::ostream& out) {
-    std::visit(
-        [&out](const auto& value){ PrintValue(value, out); },
-        node.GetValue());
-} 
-    
 
 void Print(const Document& doc, std::ostream& output) {
-    PrintNode(doc.GetRoot(),output);
-
+    PrintNode(doc.GetRoot(), PrintContext{output});
 }
 
 }  // namespace json

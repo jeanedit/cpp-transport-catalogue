@@ -126,5 +126,3 @@ namespace renderer{
             return render_doc;
         }  
 }
-
-

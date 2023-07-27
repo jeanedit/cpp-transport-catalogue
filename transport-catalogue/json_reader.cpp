@@ -2,6 +2,7 @@
 #include "transport_catalogue.h"
 #include "geo.h"
 #include "json.h"
+#include "json_builder.h"
 
 #include<iostream>
 #include <string>
@@ -21,75 +22,81 @@ namespace tr_catalogue {
         using namespace json;
         
         Dict JsonReader::StopResponse(int request_id,const std::set<std::string_view>* buses) const{
-            Dict stop_response;
-            Array json_buses;
+            json::Builder stop_response;
+            stop_response.StartDict();
             if(buses){
-                for(const std::string_view bus: *buses){
-                    json_buses.emplace_back(std::string(bus));
+               stop_response.Key("buses"s).StartArray();
+               for(const std::string_view bus: *buses){
+                    stop_response.Value(std::string(bus));
                 }
-               stop_response.emplace("buses"s,json_buses);
-                stop_response.emplace("request_id"s,request_id);
+               stop_response.EndArray();
+               stop_response.Key("request_id"s).Value(request_id);
             }
             else{
-                stop_response.emplace("request_id"s,request_id);       
-                stop_response.emplace("error_message"s,"not found"s);
+                stop_response.Key("request_id"s).Value(request_id)
+                             .Key("error_message"s).Value("not found"s);
             }
-            return stop_response;
+            stop_response.EndDict();
+            return stop_response.Build().AsMap();
         }
         
         Dict JsonReader::BusResponse(int request_id,const std::optional<BusStats>& bs) const{
-            Dict bus_response;
+            json::Builder bus_response;
+            bus_response.StartDict();
             if(bs.has_value()){
-                bus_response.emplace("curvature"s,bs->curvature);
-                bus_response.emplace("request_id"s,request_id);
-                bus_response.emplace("route_length"s,static_cast<int>(bs->route_length));
-                bus_response.emplace("stop_count"s,static_cast<int>(bs->stops));
-                bus_response.emplace("unique_stop_count"s,static_cast<int>(bs->unique_stops));
+                bus_response.Key("curvature"s).Value(bs->curvature)
+                            .Key("request_id"s).Value(request_id)
+                            .Key("route_length"s).Value(static_cast<int>(bs->route_length))
+                            .Key("stop_count"s).Value(static_cast<int>(bs->stops))
+                            .Key("unique_stop_count"s).Value(static_cast<int>(bs->unique_stops));
             }
             else{
-                bus_response.emplace("request_id"s,request_id);       
-                bus_response.emplace("error_message"s,"not found"s);
+                bus_response.Key("request_id"s).Value(request_id)
+                            .Key("error_message"s).Value("not found"s);
             }
-            return bus_response;
+            bus_response.EndDict();
+            return bus_response.Build().AsMap();
         }
         
         Dict JsonReader::MapResponse(int request_id,const svg::Document& render_doc) const{
-            Dict map_response;
+            json::Builder map_response;
             std::ostringstream ostr;
             render_doc.Render(ostr);
-
+        
             std::string svg = ostr.str();
-            map_response.emplace("map"s,std::move(svg));
-            map_response.emplace("request_id"s,request_id);
-
-            return map_response;
+            
+            map_response.StartDict()
+                        .Key("map"s).Value(std::move(svg))
+                        .Key("request_id"s).Value(request_id)
+                        .EndDict();
+            return map_response.Build().AsMap();
         }
         
         void JsonReader::ResponseRequests(std::ostream& os,const RequestHandler& rq) const{
-            Array responses;
+            json::Builder responses;
+            responses.StartArray();
             for(const auto& request:json_document_.GetRoot().AsMap().at("stat_requests"s).AsArray()){
                         if(request.AsMap().at("type"s).AsString() == "Stop"sv){
-responses.emplace_back(StopResponse(request.AsMap().at("id"s).AsInt(),rq.GetBusesByStop(request.AsMap().at("name"s).AsString())));           
+responses.Value(StopResponse(request.AsMap().at("id"s).AsInt(),rq.GetBusesByStop(request.AsMap().at("name"s).AsString())));     
                         }
                 
-            if(request.AsMap().at("type"s).AsString() == "Bus"sv){
-responses.emplace_back(BusResponse(request.AsMap().at("id"s).AsInt(),rq.GetBusStat(request.AsMap().at("name"s).AsString())));           
-            }
+                        if(request.AsMap().at("type"s).AsString() == "Bus"sv){
+responses.Value(BusResponse(request.AsMap().at("id"s).AsInt(),rq.GetBusStat(request.AsMap().at("name"s).AsString())));           
+                        }
             
-            if(request.AsMap().at("type"s).AsString() == "Map"sv){
-            responses.emplace_back(MapResponse(request.AsMap().at("id"s).AsInt(),rq.RenderMap()));            
+                        if(request.AsMap().at("type"s).AsString() == "Map"sv){
+            responses.Value(MapResponse(request.AsMap().at("id"s).AsInt(),rq.RenderMap()));            
+                         }
             }
-            }
-                
-            Print(Document(Node(responses)),os);
+            responses.EndArray();
+            Print(Document(responses.Build()),os);
         }
         
         const json::Document& JsonReader::GetJsonDocument() const{
             return json_document_;
         }
         
-        
-        
+
 		Stop JsonReader::ParseStopQuery(const Node& type_stop) const{
             const auto& type_stop_map = type_stop.AsMap();
             return Stop{type_stop_map.at("name"s).AsString(),geo::Coordinates{type_stop_map.at("latitude"s).AsDouble(),type_stop_map.at("longitude"s).AsDouble()}};

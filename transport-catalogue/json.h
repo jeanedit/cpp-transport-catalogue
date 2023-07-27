@@ -29,6 +29,7 @@ public:
 
     Node() = default;
     const Value& GetValue() const;
+    Value& GetValue();
     
     bool IsInt() const;
     bool IsDouble() const;
@@ -47,7 +48,9 @@ public:
     const Array& AsArray() const;
     const Dict& AsMap() const;
     
+    
 
+    
     bool operator==(const Node& r) const{
         return value_ == r.GetValue();
     }
