@@ -2,39 +2,39 @@
 
 namespace json{
 
-        KeyItemContext BaseContext::Key(std::string key){
+        Builder::KeyItemContext Builder::BaseContext::Key(std::string key){
             return builder_.Key(std::move(key));
         }
-        DictItemContext BaseContext::StartDict(){
+        Builder::DictItemContext Builder::BaseContext::StartDict(){
             return builder_.StartDict();
         }
-        ArrayItemContext BaseContext::StartArray(){
+        Builder::ArrayItemContext Builder::BaseContext::StartArray(){
             return builder_.StartArray();
         }
-        Builder& BaseContext::EndDict(){
+        Builder& Builder::BaseContext::EndDict(){
             return builder_.EndDict();
         }
     
-        Builder& BaseContext::EndArray(){
+        Builder& Builder::BaseContext::EndArray(){
             return builder_.EndArray();
         }
-        Builder& BaseContext::Value(Node::Value val){
+        Builder& Builder::BaseContext::Value(Node::Value val){
             return builder_.Value(std::move(val));
         }
-        ValueKeyContext KeyItemContext::Value(Node::Value val){
+        Builder::DictItemContext Builder::KeyItemContext::Value(Node::Value val){
             return BaseContext::Value(std::move(val));
         }
-       ArrayItemContext ArrayItemContext::Value(Node::Value val){
+       Builder::ArrayItemContext Builder::ArrayItemContext::Value(Node::Value val){
             return BaseContext::Value(std::move(val));
         }
     
-        KeyItemContext Builder::Key(std::string key){
+        Builder::KeyItemContext Builder::Key(std::string key){
               if(nodes_stack_.empty() || !nodes_stack_.back()->IsMap()){
                   throw std::logic_error("Calling method Key() with non-dictionary type");
               }
               auto [it,flag] = std::get<Dict>(nodes_stack_.back()->GetValue()).emplace(std::move(key),Node(nullptr));
               nodes_stack_.push_back(&it->second);
-              return KeyItemContext(*this);
+              return Builder::KeyItemContext(*this);
           }
     
           Builder& Builder::Value(Node::Value val){
@@ -60,7 +60,7 @@ namespace json{
             return *this;
           }
           
-          DictItemContext Builder::StartDict(){
+          Builder::DictItemContext Builder::StartDict(){
               if(StartContainer(Dict())){
                     return DictItemContext(*this);
               }
@@ -69,7 +69,7 @@ namespace json{
               }
           }
     
-          ArrayItemContext Builder::StartArray(){
+          Builder::ArrayItemContext Builder::StartArray(){
              if(StartContainer(Array())){
                     return ArrayItemContext(*this);
               }
