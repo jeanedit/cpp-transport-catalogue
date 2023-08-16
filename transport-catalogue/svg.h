@@ -8,6 +8,8 @@
 #include <unordered_map>
 #include <variant>
 #include <string_view>
+#include <optional>
+
 using namespace std::string_view_literals;
 namespace svg {
 

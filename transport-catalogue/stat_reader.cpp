@@ -5,6 +5,7 @@
 #include <string>
 #include <iostream>
 #include <iomanip>
+using namespace domain;
 
 namespace tr_catalogue {
 	namespace stat_handler {

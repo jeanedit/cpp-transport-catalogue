@@ -10,7 +10,7 @@
 #include <utility>
 #include <string_view>
 #include <deque>
-
+using namespace domain;
 
 namespace tr_catalogue {
 	namespace input_handler {

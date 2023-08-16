@@ -7,6 +7,7 @@
 #include <iomanip>
 #include <algorithm>
 using namespace domain;
+
 namespace tr_catalogue {
 
 
@@ -68,31 +69,30 @@ namespace tr_catalogue {
 	size_t TransportCatalogue::ComputeActualRouteLength(const Bus* bus) const {
 		size_t length = std::transform_reduce(bus->route.begin(), std::prev(bus->route.end()), std::next(bus->route.begin()), 0, std::plus{},
 			[this](const Stop* from, const Stop* to) {
-				auto stop_pair = std::make_pair(from, to);
-				if (stop_pairs_distances_.count(stop_pair)) {
-					return stop_pairs_distances_.at(stop_pair);
-				}
-				std::swap(stop_pair.first, stop_pair.second);
-				return stop_pairs_distances_.at(stop_pair);
+				return this->GetDistanceBetweenStops(from, to);
 			});
 		if (bus->is_loop) {
 			return length;
 		}
 		length += std::transform_reduce(bus->route.rbegin(), std::prev(bus->route.rend()), std::next(bus->route.rbegin()), 0, std::plus{},
 			[this](const Stop* from, const Stop* to) {
-				auto stop_pair = std::make_pair(from, to);
-				if (stop_pairs_distances_.count(stop_pair)) {
-					return stop_pairs_distances_.at(stop_pair);
-				}
-				std::swap(stop_pair.first, stop_pair.second);
-				return stop_pairs_distances_.at(stop_pair);
+				return this->GetDistanceBetweenStops(from, to);
 			});
 
 		return length;
 	}
 
 
-	void TransportCatalogue::AddStopPairsDistances(const Stop* from,const Stop* to, const int distance) {
+	void TransportCatalogue::AddStopPairsDistances(const Stop* from,const Stop* to, int distance) {
 		stop_pairs_distances_[std::make_pair(from,to)] = distance;
+	}
+
+	size_t TransportCatalogue::GetDistanceBetweenStops(const domain::Stop* from, const domain::Stop* to) const {
+		auto stop_pair = std::make_pair(from, to);
+		if (stop_pairs_distances_.count(stop_pair)) {
+			return stop_pairs_distances_.at(stop_pair);
+		}
+		std::swap(stop_pair.first, stop_pair.second);
+		return stop_pairs_distances_.at(stop_pair);
 	}
 }

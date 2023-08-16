@@ -3,8 +3,9 @@
 #include "geo.h"
 #include "json.h"
 #include "json_builder.h"
+#include "transport_router.h"
 
-#include<iostream>
+
 #include <string>
 #include <vector>
 #include <unordered_map>
@@ -20,6 +21,7 @@ namespace tr_catalogue {
         using namespace std::string_literals;
         using namespace domain;
         using namespace json;
+        using namespace router;
         
         Dict JsonReader::StopResponse(int request_id,const std::set<std::string_view>* buses) const{
             json::Builder stop_response;
@@ -71,7 +73,56 @@ namespace tr_catalogue {
                         .EndDict();
             return map_response.Build().AsMap();
         }
-        
+
+
+        Dict JsonReader::EdgeResponse(const WaitEdge& wait_edge) const {
+            json::Builder wait_edge_response;
+            wait_edge_response.StartDict()
+                .Key("type"s).Value("Wait"s)
+                .Key("time"s).Value(wait_edge.wait_time)
+                .Key("stop_name"s).Value(wait_edge.stop->name)
+            .EndDict();
+            return wait_edge_response.Build().AsMap();
+        }
+
+        Dict JsonReader::EdgeResponse(const BusEdge& bus_edge) const {
+            json::Builder bus_edge_response;
+            bus_edge_response.StartDict()
+                .Key("type"s).Value("Bus"s)
+                .Key("time"s).Value(bus_edge.total_time)
+                .Key("span_count"s).Value(static_cast<int>(bus_edge.span_count))
+                .Key("bus"s).Value(bus_edge.bus->name)
+            .EndDict();
+
+            return bus_edge_response.Build().AsMap();
+        }
+
+         Dict JsonReader::RouteResponse(int request_id, const std::optional<OptimalRoute>& total_route) const {
+             json::Builder route_response;
+             route_response.StartDict()
+                 .Key("request_id"s).Value(request_id);
+
+             if (total_route) {
+                 route_response.Key("total_time"s).Value(total_route->total_time);
+                 route_response.Key("items"s).StartArray();
+                 if (!total_route->edges.empty()) {
+                     for (size_t i = 0; i < total_route->edges.size(); ++i) {
+                         route_response.Value(EdgeResponse(total_route->edges[i].wait_edge));
+                         route_response.Value(EdgeResponse(total_route->edges[i].bus_edge));
+                     }
+                 }
+
+                 route_response.EndArray();
+             }
+             else {
+                 route_response.Key("error_message"s).Value("not found"s);
+             }
+
+             route_response.EndDict();
+             return route_response.Build().AsMap();
+         }
+
+
         void JsonReader::ResponseRequests(std::ostream& os,const RequestHandler& rq) const{
             json::Builder responses;
             responses.StartArray();
@@ -87,6 +138,10 @@ responses.Value(BusResponse(request.AsMap().at("id"s).AsInt(),rq.GetBusStat(requ
                         if(request.AsMap().at("type"s).AsString() == "Map"sv){
             responses.Value(MapResponse(request.AsMap().at("id"s).AsInt(),rq.RenderMap()));            
                          }
+
+                   if (request.AsMap().at("type"s).AsString() == "Route"sv) {
+                        responses.Value(RouteResponse(request.AsMap().at("id"s).AsInt(),rq.GetOptimalRoute(request.AsMap().at("from"s).AsString(), request.AsMap().at("to"s).AsString())));
+                    }
             }
             responses.EndArray();
             Print(Document(responses.Build()),os);
@@ -143,6 +198,7 @@ transport_catalogue_.AddStopPairsDistances(transport_catalogue_.FindStop(type_st
                         }
             }
 		}
+
         svg::Color JsonReader::ParseColor(const json::Node& node) const{
             if (node.IsString()){
                 return node.AsString();
@@ -159,7 +215,8 @@ transport_catalogue_.AddStopPairsDistances(transport_catalogue_.FindStop(type_st
         
             double alpha = array.at(3).AsDouble();
             return svg::Rgba(red, green, blue, alpha);
-}
+        }
+
         
         renderer::RenderSettings JsonReader::ParseRenderSettings() const{
             renderer::RenderSettings rs;
@@ -199,5 +256,14 @@ transport_catalogue_.AddStopPairsDistances(transport_catalogue_.FindStop(type_st
             return  renderer::MapRenderer(ParseRenderSettings(),stops_coords);
         }
         
+        domain::RoutingSettings JsonReader::ParseRoutingSettings() const {
+            const auto routings_map = json_document_.GetRoot().AsMap().at("routing_settings"s).AsMap();
+            return { routings_map.at("bus_velocity"s).AsDouble(), routings_map.at("bus_wait_time"s).AsDouble() };
+        }
+
+        router::TransportRouter JsonReader::TransportRouterFromJson() const {
+            return TransportRouter(transport_catalogue_, ParseRoutingSettings());
+        }
+
 	}
 }
