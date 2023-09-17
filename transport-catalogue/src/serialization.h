@@ -20,6 +20,5 @@ namespace tr_catalogue{
 
 	void SerializeTransportRouter(std::ostream& out, const router::TransportRouter& tr);
 	std::optional<router::TransportRouter> DeserializeTransportRouter(const domain::SerializationSettings& ss, const TransportCatalogue& ts);
-	//router::TransportRouter DeserializeTransportRouter(const domain::SerializationSettings& ss, const TransportCatalogue& ts);
 }
 
