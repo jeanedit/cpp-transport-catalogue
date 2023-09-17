@@ -47,9 +47,8 @@ namespace graph {
         };
 
 
-
-
         std::optional<RouteInfo> BuildRoute(VertexId from, VertexId to) const;
+
         inline const Graph& GetGraph() const {
             return graph_;
         }
@@ -58,9 +57,9 @@ namespace graph {
             return routes_internal_data_;
         }
 
-		inline RoutesInternalData& GetRoutesInternalData(){
-			return routes_internal_data_;
-		}
+	inline RoutesInternalData& GetRoutesInternalData(){
+	    return routes_internal_data_;
+	}
 
     private:
         void InitializeRoutesInternalData(const Graph& graph) {
