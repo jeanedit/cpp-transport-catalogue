@@ -15,6 +15,7 @@ namespace tr_catalogue {
 		stops_storage_.push_back(std::move(stop));
 		stops_[stops_storage_.back().name] = &stops_storage_.back();
 		stops_to_buses_[stops_storage_.back().name];
+		stops_to_ids[&stops_storage_.back()] = stops_storage_.size() - 1;
 	}
 
 	const Stop* TransportCatalogue::FindStop(std::string_view stop_name) const {
@@ -30,6 +31,7 @@ namespace tr_catalogue {
 		for (const auto& stop : buses_storage_.back().route) {
 			stops_to_buses_.at(stop->name).insert(buses_storage_.back().name);
 		}
+		buses_to_ids[&buses_storage_.back()] = buses_storage_.size() - 1;
 	}
 
 	const Bus* TransportCatalogue::FindBus(std::string_view bus_name) const {
@@ -67,14 +69,14 @@ namespace tr_catalogue {
      }
     
 	size_t TransportCatalogue::ComputeActualRouteLength(const Bus* bus) const {
-		size_t length = std::transform_reduce(bus->route.begin(), std::prev(bus->route.end()), std::next(bus->route.begin()), 0, std::plus{},
+		size_t length = std::transform_reduce(bus->route.begin(), std::prev(bus->route.end()), std::next(bus->route.begin()), (size_t)0, std::plus{},
 			[this](const Stop* from, const Stop* to) {
 				return this->GetDistanceBetweenStops(from, to);
 			});
 		if (bus->is_loop) {
 			return length;
 		}
-		length += std::transform_reduce(bus->route.rbegin(), std::prev(bus->route.rend()), std::next(bus->route.rbegin()), 0, std::plus{},
+		length += std::transform_reduce(bus->route.rbegin(), std::prev(bus->route.rend()), std::next(bus->route.rbegin()), (size_t)0, std::plus{},
 			[this](const Stop* from, const Stop* to) {
 				return this->GetDistanceBetweenStops(from, to);
 			});

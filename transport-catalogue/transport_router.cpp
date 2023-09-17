@@ -14,11 +14,11 @@ namespace tr_catalogue::router {
 		TransportGraph::TransportGraph(const TransportCatalogue& ts, domain::RoutingSettings route_settings) : transport_catalogue_(ts), 
 			route_settings_(route_settings), 
 			routes_graph_(ts.GetAllStops().size()) {
-			InitializeVerticies();
-			AddAllBusRoutes();
+			FillGraphWithStops();
+			FillGraphWithBusRoutes();
 		}
 
-		void TransportGraph::InitializeVerticies() {
+		void TransportGraph::FillGraphWithStops() {
 			const auto& stops = transport_catalogue_.GetAllStops();
 			graph::VertexId id = 0;
 			for (const domain::Stop& stop : stops) {
@@ -28,7 +28,7 @@ namespace tr_catalogue::router {
 		}
 
 		void TransportGraph::AddBusRoute(const domain::Bus* bus) {
-			const auto bus_route = GetStopPairsTimeSpanOnRoute(bus);
+			const auto& bus_route = GetStopPairsTimeSpanOnRoute(bus);
 			for (auto& [stop_pair, time_span] : bus_route) {
 				graph::VertexId from = stops_to_vertices_.at(stop_pair.first);
 				graph::VertexId to = stops_to_vertices_.at(stop_pair.second);
@@ -36,22 +36,21 @@ namespace tr_catalogue::router {
 				WaitEdge wait_edge{ stop_pair.first,route_settings_.bus_wait_time };
 				BusEdge bus_edge{ bus,time_span.span_count,time_span.time };
 				edgeid_to_combined_edge_.emplace(routes_graph_.AddEdge(edge), CombinedEdge{ wait_edge,bus_edge });
-
 			}
 		}
 
-		void TransportGraph::AddAllBusRoutes() {
+		void TransportGraph::FillGraphWithBusRoutes() {
 			const auto& buses = transport_catalogue_.GetAllBuses();
 			for (const domain::Bus& bus : buses) {
 				AddBusRoute(&bus);
 			}
 		}
 
-		UnMapStopPairsTimeSpan TransportGraph::GetStopPairsTimeSpanOnRoute(const domain::Bus* bus) const {
-			UnMapStopPairsTimeSpan result;
-			FillUnMapWithTimeSpan(bus->route.begin(), bus->route.end(), result);
+		UnorderMapStopPairsTimeSpan TransportGraph::GetStopPairsTimeSpanOnRoute(const domain::Bus* bus) const {
+			UnorderMapStopPairsTimeSpan result;
+			FillUnorderMapWithTimeSpan(bus->route.begin(), bus->route.end(), result);
 			if (!bus->is_loop) {
-				FillUnMapWithTimeSpan(bus->route.rbegin(), bus->route.rend(), result);
+				FillUnorderMapWithTimeSpan(bus->route.rbegin(), bus->route.rend(), result);
 			}
 
 			return result;
@@ -63,7 +62,10 @@ namespace tr_catalogue::router {
 		}
 
 
-		TransportRouter::TransportRouter(const TransportCatalogue& ts, domain::RoutingSettings route_settings) :graph_(ts, route_settings), router_(graph_.routes_graph_) {
+		TransportRouter::TransportRouter(const TransportCatalogue& ts, domain::RoutingSettings route_settings) 
+			: graph_(ts, route_settings),
+			router_(graph_.routes_graph_) 
+		{
 		}
 
 		std::optional<OptimalRoute> TransportRouter::BuildOptimalRoute(const domain::Stop* from, const domain::Stop* to) const {
@@ -73,13 +75,18 @@ namespace tr_catalogue::router {
 			if (auto router = router_.BuildRoute(from_id, to_id)) {
 				OptimalRoute total_route{};
 				total_route.total_time = router->weight;
-				for (const auto edge_id : router->edges) {
-					total_route.edges.push_back(graph_.edgeid_to_combined_edge_.at(edge_id));
 
+				for (const auto edge_id : router->edges) {
+					std::cout << graph_.edgeid_to_combined_edge_.at(edge_id).bus_edge.span_count << std::endl;
+					total_route.edges.push_back(graph_.edgeid_to_combined_edge_.at(edge_id));
+					std::cout << "FAIL5" << std::endl;
 				}
 				optimal_route = std::make_optional(total_route);
 			}
+
 			return optimal_route;
 		}
+
+
 
 } // end of namespace tr_catalogue::router

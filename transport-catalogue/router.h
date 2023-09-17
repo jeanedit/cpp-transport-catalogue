@@ -11,6 +11,7 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
+#include <iostream>
 
 namespace graph {
 
@@ -20,22 +21,48 @@ namespace graph {
         using Graph = DirectedWeightedGraph<Weight>;
 
     public:
+		struct RouteInternalData {
+			Weight weight;
+			std::optional<EdgeId> prev_edge;
+		};
+
+        using RoutesInternalData = std::vector<std::vector<std::optional<RouteInternalData>>>;
         explicit Router(const Graph& graph);
+
+        explicit Router(const Graph& graph,RoutesInternalData&& route_internal_data)
+            :graph_(graph),
+            routes_internal_data_(std::move(route_internal_data)) 
+        {
+        }
+
+		explicit Router(const Graph& graph, const RoutesInternalData& route_internal_data)
+			:graph_(graph),
+			routes_internal_data_(route_internal_data)
+		{
+		}
 
         struct RouteInfo {
             Weight weight;
             std::vector<EdgeId> edges;
         };
 
+
+
+
         std::optional<RouteInfo> BuildRoute(VertexId from, VertexId to) const;
+        inline const Graph& GetGraph() const {
+            return graph_;
+        }
+
+        inline const RoutesInternalData& GetRoutesInternalData() const {
+            return routes_internal_data_;
+        }
+
+		inline RoutesInternalData& GetRoutesInternalData(){
+			return routes_internal_data_;
+		}
 
     private:
-        struct RouteInternalData {
-            Weight weight;
-            std::optional<EdgeId> prev_edge;
-        };
-        using RoutesInternalData = std::vector<std::vector<std::optional<RouteInternalData>>>;
-
         void InitializeRoutesInternalData(const Graph& graph) {
             const size_t vertex_count = graph.GetVertexCount();
             for (VertexId vertex = 0; vertex < vertex_count; ++vertex) {
@@ -97,7 +124,9 @@ namespace graph {
     template <typename Weight>
     std::optional<typename Router<Weight>::RouteInfo> Router<Weight>::BuildRoute(VertexId from,
         VertexId to) const {
+
         const auto& route_internal_data = routes_internal_data_.at(from).at(to);
+
         if (!route_internal_data) {
             return std::nullopt;
         }

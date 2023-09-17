@@ -124,24 +124,26 @@ namespace tr_catalogue {
 
 
         void JsonReader::ResponseRequests(std::ostream& os,const RequestHandler& rq) const{
+
             json::Builder responses;
             responses.StartArray();
             for(const auto& request:json_document_.GetRoot().AsMap().at("stat_requests"s).AsArray()){
-                        if(request.AsMap().at("type"s).AsString() == "Stop"sv){
-responses.Value(StopResponse(request.AsMap().at("id"s).AsInt(),rq.GetBusesByStop(request.AsMap().at("name"s).AsString())));     
-                        }
+  
+                if(request.AsMap().at("type"s).AsString() == "Stop"sv){
+                    responses.Value(StopResponse(request.AsMap().at("id"s).AsInt(),rq.GetBusesByStop(request.AsMap().at("name"s).AsString())));     
+                }
                 
-                        if(request.AsMap().at("type"s).AsString() == "Bus"sv){
-responses.Value(BusResponse(request.AsMap().at("id"s).AsInt(),rq.GetBusStat(request.AsMap().at("name"s).AsString())));           
-                        }
+                if(request.AsMap().at("type"s).AsString() == "Bus"sv){
+                    responses.Value(BusResponse(request.AsMap().at("id"s).AsInt(),rq.GetBusStat(request.AsMap().at("name"s).AsString())));           
+                }
             
-                        if(request.AsMap().at("type"s).AsString() == "Map"sv){
-            responses.Value(MapResponse(request.AsMap().at("id"s).AsInt(),rq.RenderMap()));            
-                         }
+				if(request.AsMap().at("type"s).AsString() == "Map"sv){
+				    responses.Value(MapResponse(request.AsMap().at("id"s).AsInt(),rq.RenderMap()));            
+				}
 
-                   if (request.AsMap().at("type"s).AsString() == "Route"sv) {
-                        responses.Value(RouteResponse(request.AsMap().at("id"s).AsInt(),rq.GetOptimalRoute(request.AsMap().at("from"s).AsString(), request.AsMap().at("to"s).AsString())));
-                    }
+                if (request.AsMap().at("type"s).AsString() == "Route"sv) {
+                    responses.Value(RouteResponse(request.AsMap().at("id"s).AsInt(),rq.GetOptimalRoute(request.AsMap().at("from"s).AsString(), request.AsMap().at("to"s).AsString())));
+                }
             }
             responses.EndArray();
             Print(Document(responses.Build()),os);
@@ -157,46 +159,48 @@ responses.Value(BusResponse(request.AsMap().at("id"s).AsInt(),rq.GetBusStat(requ
             return Stop{type_stop_map.at("name"s).AsString(),geo::Coordinates{type_stop_map.at("latitude"s).AsDouble(),type_stop_map.at("longitude"s).AsDouble()}};
 		}
 
-		void JsonReader::ParseStopQueryDistance(const Node& type_stop) {
+		void JsonReader::ParseStopQueryDistance(TransportCatalogue& ts, const Node& type_stop) const{
             const auto& type_stop_map = type_stop.AsMap();
             for(const auto& [to_stop,dist_to_stop]:type_stop_map.at("road_distances"s).AsMap()){
-transport_catalogue_.AddStopPairsDistances(transport_catalogue_.FindStop(type_stop_map.at("name"s).AsString()), transport_catalogue_.FindStop(to_stop), dist_to_stop.AsInt());
+                ts.AddStopPairsDistances(ts.FindStop(type_stop_map.at("name"s).AsString()), 
+                                                           ts.FindStop(to_stop), dist_to_stop.AsInt());
             }
 
 		}
 
-		Bus JsonReader::ParseBusQuery(const Node& node_bus) const {
+		Bus JsonReader::ParseBusQuery(const TransportCatalogue& ts,const Node& node_bus) const {
             const auto& node_bus_map = node_bus.AsMap();
 			Bus bus;
 			bus.is_loop = node_bus_map.at("is_roundtrip"s).AsBool();
 			bus.name = node_bus_map.at("name"s).AsString();
             for(const auto& stop:node_bus_map.at("stops"s).AsArray()){
-                bus.route.push_back(transport_catalogue_.FindStop(stop.AsString()));
+                bus.route.push_back(ts.FindStop(stop.AsString()));
             }
 			return bus;
 		}
         
         
         
-		void JsonReader::ReadJson() {
-            
+		TransportCatalogue JsonReader::TransportCatalogueFromJson() const {
+            TransportCatalogue ts;
             for(const auto& request:json_document_.GetRoot().AsMap().at("base_requests"s).AsArray()){
-                        if(request.AsMap().at("type"s).AsString() == "Stop"sv){
-                            transport_catalogue_.AddStop(ParseStopQuery(request.AsMap()));                     
-                        }
+                if(request.AsMap().at("type"s).AsString() == "Stop"sv){
+                    ts.AddStop(ParseStopQuery(request.AsMap()));                     
+                }
             }
             
             for(const auto& request:json_document_.GetRoot().AsMap().at("base_requests"s).AsArray()){
-                        if(request.AsMap().at("type"s).AsString() == "Stop"sv){
-                            ParseStopQueryDistance(request);                      
-                        }
+                if(request.AsMap().at("type"s).AsString() == "Stop"sv){
+                    ParseStopQueryDistance(ts, request);
+                }
             }
 
             for(const auto& request:json_document_.GetRoot().AsMap().at("base_requests"s).AsArray()){
-                        if(request.AsMap().at("type"s).AsString() == "Bus"sv){
-                             transport_catalogue_.AddBus(ParseBusQuery(request));                      
-                        }
+                if(request.AsMap().at("type"s).AsString() == "Bus"sv){
+                   ts.AddBus(ParseBusQuery(ts,request));                      
+                }
             }
+            return ts;
 		}
 
         svg::Color JsonReader::ParseColor(const json::Node& node) const{
@@ -229,9 +233,13 @@ transport_catalogue_.AddStopPairsDistances(transport_catalogue_.FindStop(type_st
    
             rs.stop_radius = rs_map.at("stop_radius"s).AsDouble();
             rs.bus_label_font_size = rs_map.at("bus_label_font_size"s).AsInt();
-            rs.bus_label_offset = {rs_map.at("bus_label_offset"s).AsArray().at(0).AsDouble(),rs_map.at("bus_label_offset"s).AsArray().at(1).AsDouble()};
+            rs.bus_label_offset = svg::Point {rs_map.at("bus_label_offset"s).AsArray().at(0).AsDouble(),
+                                              rs_map.at("bus_label_offset"s).AsArray().at(1).AsDouble()};
+
             rs.stop_label_font_size = rs_map.at("stop_label_font_size"s).AsInt();
-            rs.stop_label_offset = {rs_map.at("stop_label_offset"s).AsArray().at(0).AsDouble(),rs_map.at("stop_label_offset"s).AsArray().at(1).AsDouble()};
+
+            rs.stop_label_offset = svg::Point{rs_map.at("stop_label_offset"s).AsArray().at(0).AsDouble(),
+                                              rs_map.at("stop_label_offset"s).AsArray().at(1).AsDouble()};
 
             rs.underlayer_color = ParseColor(rs_map.at("underlayer_color"s));
             rs.underlayer_width = rs_map.at("underlayer_width"s).AsDouble();
@@ -242,18 +250,23 @@ transport_catalogue_.AddStopPairsDistances(transport_catalogue_.FindStop(type_st
             }
             return rs;
         }
+
+        domain::SerializationSettings JsonReader::ParseSerializationSettings() const {
+            const auto ss_map = json_document_.GetRoot().AsMap().at("serialization_settings"s).AsMap();
+            return SerializationSettings{ ss_map.at("file").AsString() };
+        }
+
         
-        renderer::MapRenderer JsonReader::MapRenderFromJson() const{
+        renderer::MapRenderer JsonReader::MapRenderFromJson(const TransportCatalogue& ts) const{
             std::vector<geo::Coordinates> stops_coords;
-            stops_coords.reserve(transport_catalogue_.GetAllStops().size());        
-            for(const Bus& bus:transport_catalogue_.GetAllBuses()){
+            stops_coords.reserve(ts.GetAllStops().size());        
+            for(const Bus& bus:ts.GetAllBuses()){
                 for(const Stop* stop:bus.route){
                     stops_coords.emplace_back(stop->geo_coords); 
                 }
-
             }
            
-            return  renderer::MapRenderer(ParseRenderSettings(),stops_coords);
+            return  renderer::MapRenderer(std::move(ParseRenderSettings()),stops_coords);
         }
         
         domain::RoutingSettings JsonReader::ParseRoutingSettings() const {
@@ -261,8 +274,8 @@ transport_catalogue_.AddStopPairsDistances(transport_catalogue_.FindStop(type_st
             return { routings_map.at("bus_velocity"s).AsDouble(), routings_map.at("bus_wait_time"s).AsDouble() };
         }
 
-        router::TransportRouter JsonReader::TransportRouterFromJson() const {
-            return TransportRouter(transport_catalogue_, ParseRoutingSettings());
+        router::TransportRouter JsonReader::TransportRouterFromJson(const TransportCatalogue& ts) const {
+            return TransportRouter(ts, ParseRoutingSettings());
         }
 
 	}

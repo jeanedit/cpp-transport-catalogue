@@ -90,13 +90,15 @@ struct Point {
  */
 struct RenderContext {
     RenderContext(std::ostream& out)
-        : out(out) {
+        : out(out) 
+    {
     }
 
     RenderContext(std::ostream& out, int indent_step, int indent = 0)
         : out(out)
         , indent_step(indent_step)
-        , indent(indent) {
+        , indent(indent) 
+    {
     }
 
     RenderContext Indented() const {

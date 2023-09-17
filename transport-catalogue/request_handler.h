@@ -10,8 +10,13 @@
 namespace tr_catalogue {
     class RequestHandler {
     public:
-        RequestHandler(const TransportCatalogue& tc, const router::TransportRouter& tr, const renderer::MapRenderer& renderer):tc_(tc),tr_(tr),renderer_(renderer){}
-    
+        RequestHandler(const TransportCatalogue& tc, const router::TransportRouter& tr, const renderer::MapRenderer& renderer)
+            :tc_(tc),
+            tr_(tr),
+            renderer_(renderer)
+        {
+        }
+
         // returns information about bus
         std::optional<domain::BusStats> GetBusStat(std::string_view bus_name) const;
     

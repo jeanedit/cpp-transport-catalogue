@@ -15,22 +15,27 @@ namespace tr_catalogue {
         
 class JsonReader{
     public:
-        JsonReader(TransportCatalogue& tr_catalogue,std::istream& is):transport_catalogue_(tr_catalogue),is_(is),json_document_(json::Load(is_)){}
+        JsonReader(std::istream& is)
+            :is_(is),
+            json_document_(json::Load(is_))
+        {
+        }
     
-        void ReadJson();
+        TransportCatalogue TransportCatalogueFromJson() const;
     
         const json::Document& GetJsonDocument() const;
     
         void ResponseRequests(std::ostream& os,const RequestHandler& rq) const;
     
         renderer::RenderSettings ParseRenderSettings() const;
-        renderer::MapRenderer MapRenderFromJson() const;
+        renderer::MapRenderer MapRenderFromJson(const TransportCatalogue& ts) const;
 
-        router::TransportRouter TransportRouterFromJson() const;
+        router::TransportRouter TransportRouterFromJson(const TransportCatalogue& ts) const;
         domain::RoutingSettings ParseRoutingSettings() const;
+        domain::SerializationSettings ParseSerializationSettings() const;
+
     
     private:
-        TransportCatalogue& transport_catalogue_;
         std::istream& is_;
         json::Document json_document_;
                                                                                                    
@@ -45,9 +50,9 @@ class JsonReader{
 
         domain::Stop ParseStopQuery(const json::Node& type_stop) const;
 
-		void ParseStopQueryDistance(const json::Node& type_stop);
+		void ParseStopQueryDistance(TransportCatalogue& ts, const json::Node& type_stop) const;
 
-		domain::Bus ParseBusQuery(const json::Node& type_bus) const;
+		domain::Bus ParseBusQuery(const TransportCatalogue& ts,const json::Node& type_bus) const;
     
         svg::Color ParseColor(const json::Node& node) const;
     	

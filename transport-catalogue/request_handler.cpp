@@ -28,10 +28,10 @@ namespace tr_catalogue {
 		return nullptr;
     }
 
-    std::optional<OptimalRoute> RequestHandler::GetOptimalRoute(std::string_view from, std::string_view to) const {
-        return tr_.BuildOptimalRoute(tc_.FindStop(from), tc_.FindStop(to));
-    }
-    
+	std::optional<OptimalRoute> RequestHandler::GetOptimalRoute(std::string_view from, std::string_view to) const {
+		return tr_.BuildOptimalRoute(tc_.FindStop(from), tc_.FindStop(to));
+	}
+
     svg::Document RequestHandler::RenderMap() const{
         return renderer_.RenderRoutes(tc_.GetAllBuses(),tc_.StopsWithBus());
     }

@@ -3,10 +3,13 @@
 #include <string_view>
 #include <vector>
 #include <set>
+#include <filesystem>
+
 #include "geo.h"
 
 
 namespace domain{
+	using Path = std::filesystem::path;
 
 	struct Stop {
 		std::string name;
@@ -38,6 +41,10 @@ namespace domain{
 	struct RoutingSettings {
 		double bus_velocity;
 		double bus_wait_time;
+	};
+
+	struct SerializationSettings {
+		Path file;
 	};
 
 	struct TimeBusSpan {

@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package proto_graph;
+
+message Edge{
+	uint32 from = 1;
+	uint32 to = 2;
+	double weight = 3;
+}
+
+
+message Graph{
+	repeated Edge edges = 1;
+}
+
+message RouteInternalData{
+	double weight = 1;
+	uint32 prev_edge = 2;
+	bool is_prev_edge = 3;
+}
+
+message OptionalRouteInternalData{
+	RouteInternalData route_internal_data = 1;
+	bool is_route_internal_data = 2;
+}
+
+message ArrayRouteInternalData{
+	repeated OptionalRouteInternalData array_data = 1;
+}
+
+message Router{
+	repeated ArrayRouteInternalData matrix_data = 1;
+}

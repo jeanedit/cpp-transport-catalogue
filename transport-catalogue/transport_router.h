@@ -9,7 +9,7 @@
 
 namespace tr_catalogue::router {
 
-	using UnMapStopPairsTimeSpan = std::unordered_map<domain::StopPair, domain::TimeBusSpan, domain::StopPairHasher>;
+	using UnorderMapStopPairsTimeSpan = std::unordered_map<domain::StopPair, domain::TimeBusSpan, domain::StopPairHasher>;
 
 	struct WaitEdge {
 		const domain::Stop* stop;
@@ -34,20 +34,60 @@ namespace tr_catalogue::router {
 
 	class TransportGraph {
 	public:
-		TransportGraph(const TransportCatalogue& ts, domain::RoutingSettings route_settings);
+		explicit TransportGraph(const TransportCatalogue& ts, domain::RoutingSettings route_settings);
+		explicit TransportGraph(const TransportCatalogue& ts, domain::RoutingSettings&& route_settings, graph::DirectedWeightedGraph<double>&& graph)
+			:transport_catalogue_(ts),
+			route_settings_(std::move(route_settings)), 
+			routes_graph_(std::move(graph))
+		{
+		}
 
-		void InitializeVerticies();
+		void FillGraphWithStops();
 
 		void AddBusRoute(const domain::Bus* bus);
 
-		void AddAllBusRoutes();
+		void FillGraphWithBusRoutes();
 
-		UnMapStopPairsTimeSpan GetStopPairsTimeSpanOnRoute(const domain::Bus* bus) const;
+		UnorderMapStopPairsTimeSpan GetStopPairsTimeSpanOnRoute(const domain::Bus* bus) const;
 
 		template<typename InputIt>
-		void FillUnMapWithTimeSpan(InputIt begin, InputIt last, UnMapStopPairsTimeSpan& unmap) const;
+		void FillUnorderMapWithTimeSpan(InputIt begin, InputIt last, UnorderMapStopPairsTimeSpan& unmap) const;
 
 		static inline double ComputeTime(double distance, double velocity);
+
+
+		inline const TransportCatalogue& GetTransportCatalogue() const {
+			return transport_catalogue_;
+		}
+
+		inline const domain::RoutingSettings& GetRoutingSettings() const {
+			return route_settings_;
+		}
+
+		inline const graph::DirectedWeightedGraph<double>& GetRoutesGraph() const {
+			return routes_graph_;
+		}
+
+		inline const std::unordered_map<const domain::Stop*, graph::VertexId>& GetStopsToVertices() const {
+			return stops_to_vertices_;
+		}
+
+		inline const std::unordered_map<graph::EdgeId, CombinedEdge>& GetEdgeIdToEdge() const {
+			return edgeid_to_combined_edge_;
+		}
+
+		inline graph::DirectedWeightedGraph<double>& GetRoutesGraph() {
+			return routes_graph_;
+		}
+
+		inline std::unordered_map<const domain::Stop*, graph::VertexId>& GetStopsToVertices(){
+			return stops_to_vertices_;
+		}
+
+		inline std::unordered_map<graph::EdgeId, CombinedEdge>& GetEdgeIdToEdge(){
+			return edgeid_to_combined_edge_;
+		}
+
 		friend class TransportRouter;
 	private:
 		const TransportCatalogue& transport_catalogue_;
@@ -65,7 +105,41 @@ namespace tr_catalogue::router {
 	public:
 		explicit TransportRouter(const TransportCatalogue& ts, domain::RoutingSettings route_settings);
 
+		explicit TransportRouter(TransportGraph&& transport_graph,graph::Router<double>::RoutesInternalData&& routes_internal_data)
+			:graph_(std::move(transport_graph)),
+			router_(graph_.GetRoutesGraph(),
+			std::move(routes_internal_data))
+		{
+		}
+
 		std::optional<OptimalRoute> BuildOptimalRoute(const domain::Stop* from, const domain::Stop* to) const;
+
+		inline const TransportGraph& GetTransportGraph() const {
+			return graph_;
+		}
+
+		inline const graph::Router<double>& GetRouter() const {
+			return router_;
+		}
+
+		inline graph::Router<double>& GetRouter() {
+			return router_;
+		}
+
+		TransportRouter(TransportRouter&& transport_router) noexcept
+			:graph_(std::move(transport_router.graph_)),
+			router_(graph_.GetRoutesGraph(), std::move(transport_router.GetRouter().GetRoutesInternalData()))
+		{
+		}
+
+		TransportRouter(const TransportRouter& transport_router)
+			:graph_(transport_router.graph_),
+			router_(graph_.GetRoutesGraph(),transport_router.GetRouter().GetRoutesInternalData())
+		{
+		}
+
+		TransportRouter operator=(const TransportRouter& transport_router) = delete;
+		TransportRouter operator=(TransportRouter&& transport_router) = delete;
 
 	private:
 		TransportGraph graph_;
@@ -77,7 +151,7 @@ namespace tr_catalogue::router {
 
 
 	template<typename InputIt>
-	void TransportGraph::FillUnMapWithTimeSpan(InputIt begin, InputIt last, UnMapStopPairsTimeSpan& unmap) const {
+	void TransportGraph::FillUnorderMapWithTimeSpan(InputIt begin, InputIt last, UnorderMapStopPairsTimeSpan& unmap) const {
 		for (auto from = begin; from != last; std::advance(from, 1)) {
 			double time = 0.0;
 			for (auto to = std::next(from); to != last; std::advance(to, 1)) {

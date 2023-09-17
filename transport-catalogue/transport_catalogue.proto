@@ -1,0 +1,28 @@
+syntax = "proto3";
+
+package proto_transport_catalogue;
+
+
+message Stop{
+    string name = 1;
+    double lat = 2;
+    double lng = 3;
+}
+
+message StopPairDistance{
+    uint32 stop_from = 1;
+    uint32 stop_to = 2;
+    uint64 distance = 3;
+}
+
+message Bus{
+    string name = 1;
+    bool is_loop = 2;
+    repeated uint32 stop_ids = 3;
+}
+
+message TransportCatalogue{
+    repeated Stop stops = 1;
+    repeated Bus buses = 2;
+    repeated StopPairDistance distances = 3;
+}

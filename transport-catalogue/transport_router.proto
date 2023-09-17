@@ -1,0 +1,37 @@
+syntax = "proto3";
+
+package proto_router;
+import "graph.proto";
+
+message RoutingSettings{
+	double bus_velocity = 1;
+	double bus_wait_time = 2;
+}
+
+message WaitEdge{
+	uint32 stop = 1;
+	double wait_time = 2;
+}
+
+message BusEdge{
+	uint32 bus = 1;
+	uint32 span_count = 2;
+	double total_time = 3;
+}
+
+message CombinedEdge{
+	WaitEdge wait_edge = 1;
+	BusEdge bus_edge = 2;
+}
+
+message TransportGraph{
+	RoutingSettings routing_settings = 1;
+	proto_graph.Graph routes_graph = 2;
+	map <uint32,uint32> stops_to_vertices = 3;
+	map<uint32,CombinedEdge> edgeid_to_combined_edge = 4;
+}
+
+message TransportRouter{
+	TransportGraph graph = 6;
+	proto_graph.Router router = 7;
+}
