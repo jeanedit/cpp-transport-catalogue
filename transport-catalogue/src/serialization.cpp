@@ -343,4 +343,4 @@ namespace tr_catalogue {
 		return { std::move(router::TransportRouter(std::move(tr_graph),std::move(routes_internal_data)))};
 	}
 
-}
+} // end of namespace tr_catalogue
