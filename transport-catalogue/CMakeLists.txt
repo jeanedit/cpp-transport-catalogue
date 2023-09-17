@@ -6,9 +6,16 @@ set(CMAKE_CXX_STANDARD 17)
 find_package(Protobuf REQUIRED)
 find_package(Threads REQUIRED)
 
-protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS svg.proto map_renderer.proto transport_catalogue.proto graph.proto transport_router.proto)
+set(PROTO_DIR proto)
+protobuf_generate_cpp(PROTO_SRCS PROTO_HDRS 
+		      ${PROTO_DIR}/svg.proto 
+		      ${PROTO_DIR}/map_renderer.proto 
+		      ${PROTO_DIR}/transport_catalogue.proto 
+		      ${PROTO_DIR}/graph.proto 
+		      ${PROTO_DIR}/transport_router.proto)
 
-file(GLOB TRANSPORTCATALOGUE_FILES "*.h" "*.cpp")
+set(SRC_DIR src)
+file(GLOB TRANSPORTCATALOGUE_FILES "${SRC_DIR}/*.h" "${SRC_DIR}/*.cpp")
 
 
 add_executable(transport_catalogue ${PROTO_SRCS} ${PROTO_HDRS} ${TRANSPORTCATALOGUE_FILES})
