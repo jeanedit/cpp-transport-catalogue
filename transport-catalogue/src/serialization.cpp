@@ -65,7 +65,7 @@ namespace tr_catalogue {
 			}
 			return color;
 		}
-	}
+	} // end of namespace util
 
 
 	void SerializeTransportCatalogue(std::ostream& out, const TransportCatalogue& ts) {
