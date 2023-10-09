@@ -90,10 +90,7 @@ The Transport Catalogue is a comprehensive digital repository designed to manage
 2. Any of the following compilers: GCC, Clang or MSVC.
 3. Protobuf 3
 # Development plans:
-1. Create a user interface for more convenient interaction with the program.
-   
+1. Create a user interface for more convenient interaction with the program. 
 2. Render maps using more advanced technologies, such as OpenGL.
-   
 3. Support new formats in addition to JSON.
-
 4. Add rendering in a more convenient format, not just in SVG.
