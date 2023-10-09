@@ -24,12 +24,12 @@ namespace renderer{
 
     class SphereProjector {
     public:
-        // points_begin и points_end задают начало и конец интервала элементов geo::Coordinates
+        // points_begin and points_end define the start and end of the range of elements in geo::Coordinates.
         template <typename PointInputIt>
         SphereProjector(PointInputIt points_begin, PointInputIt points_end,
                         double max_width, double max_height, double padding);
     
-        // Проецирует широту и долготу в координаты внутри SVG-изображения
+        // Projects latitude and longitude into coordinates within an SVG image.
         svg::Point operator()(geo::Coordinates coords) const;
     
     private:
@@ -41,7 +41,7 @@ namespace renderer{
     
     
     struct RenderSettings{
-        //width and height of image in pixels
+        // width and height of image in pixels
         double width;
         double height;
         
@@ -92,50 +92,49 @@ namespace renderer{
         
      // template constructor
     template <typename PointInputIt>
-        SphereProjector::SphereProjector(PointInputIt points_begin, PointInputIt points_end,
-                        double max_width, double max_height, double padding)
+    SphereProjector::SphereProjector(PointInputIt points_begin, PointInputIt points_end, double max_width, double max_height, double padding)
             : padding_(padding) //
         {
-            // Если точки поверхности сферы не заданы, вычислять нечего
+            // If surface points of the sphere are not defined, there is nothing to calculate.
             if (points_begin == points_end) {
                 return;
             }
     
-            // Находим точки с минимальной и максимальной долготой
+            // Find points with the minimum and maximum longitude.
             const auto [left_it, right_it] = std::minmax_element(
                 points_begin, points_end,
                 [](auto lhs, auto rhs) { return lhs.lng < rhs.lng; });
             min_lon_ = left_it->lng;
             const double max_lon = right_it->lng;
     
-            // Находим точки с минимальной и максимальной широтой
+            // Find points with the minimum and maximum latitude.
             const auto [bottom_it, top_it] = std::minmax_element(
                 points_begin, points_end,
                 [](auto lhs, auto rhs) { return lhs.lat < rhs.lat; });
             const double min_lat = bottom_it->lat;
             max_lat_ = top_it->lat;
     
-            // Вычисляем коэффициент масштабирования вдоль координаты x
+            // Calculate the scaling coefficient along the x-coordinate.
             std::optional<double> width_zoom;
             if (!IsZero(max_lon - min_lon_)) {
                 width_zoom = (max_width - 2 * padding) / (max_lon - min_lon_);
             }
     
-            // Вычисляем коэффициент масштабирования вдоль координаты y
+            // Calculate the scaling coefficient along the y-coordinate.
             std::optional<double> height_zoom;
             if (!IsZero(max_lat_ - min_lat)) {
                 height_zoom = (max_height - 2 * padding) / (max_lat_ - min_lat);
             }
     
             if (width_zoom && height_zoom) {
-                // Коэффициенты масштабирования по ширине и высоте ненулевые,
-                // берём минимальный из них
+                // The scaling coefficients for width and height are both non-zero, 
+                // take the minimum of them.
                 zoom_coeff_ = std::min(*width_zoom, *height_zoom);
             } else if (width_zoom) {
-                // Коэффициент масштабирования по ширине ненулевой, используем его
+                // The scaling coefficient for width is non-zero, so use it.
                 zoom_coeff_ = *width_zoom;
             } else if (height_zoom) {
-                // Коэффициент масштабирования по высоте ненулевой, используем его
+                // The scaling coefficient for height is non-zero, so use it.
                 zoom_coeff_ = *height_zoom;
             }
         }
