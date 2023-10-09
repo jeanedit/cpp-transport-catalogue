@@ -25,8 +25,8 @@ The Transport Catalogue is a comprehensive digital repository designed to manage
 8. Optimal Route Planning: The catalogue's route optimization functionality helps users plan journeys by identifying the fastest and most convenient routes, reducing travel time and enhancing the overall passenger 
    experience.
 
-# Использование
-0. Установка всех необходимых компонентов.
+# Usage
+# Step 1: Build the Project
 1. Инициализация поискового сервера происходит с использованием стоп-слов.
 2. Добавление документов в сервер.
 3. Формирование очереди запросов.
