@@ -58,70 +58,6 @@ The Transport Catalogue is a comprehensive digital repository designed to manage
    - `render_settings`: Configure rendering settings, including the width, height, padding, and appearance of the rendered map.
 
    - `base_requests`: Add transportation data, including buses and stops, in the desired format.
-   Here's some example:
-   {
-    "serialization_settings": {
-        "file": "transport_catalogue.db"
-    },
-    "routing_settings": {
-        "bus_wait_time": 2,
-        "bus_velocity": 30
-    },
-    "render_settings": {
-        "width": 1200,
-        "height": 500,
-        "padding": 50,
-        "stop_radius": 5,
-        "line_width": 14,
-        "bus_label_font_size": 20,
-        "bus_label_offset": [7, 15],
-        "stop_label_font_size": 18,
-        "stop_label_offset": [7, -3],
-        "underlayer_color": [255, 255, 255, 0.85],
-        "underlayer_width": 3,
-        "color_palette": [
-            "green",
-            [255, 160, 0],
-            "red"
-        ]
-    },
-    "base_requests": [
-        {
-            "type": "Bus",
-            "name": "14",
-            "stops": [
-                "Liza Chaikina Street",
-                "Electroseti",
-                "Riviera Bridge",
-                "Sochi Hotel",
-                "Kubanskaya Street",
-                "On Demand",
-                "Dokuchaeva Street",
-                "Liza Chaikina Street"
-            ],
-            "is_roundtrip": true
-        },
-        {
-            "type": "Stop",
-            "name": "Liza Chaikina Street",
-            "latitude": 43.590317,
-            "longitude": 39.746833,
-            "road_distances": {
-                "Electroseti": 4300,
-                "Dokuchaeva Street": 2000
-            }
-        },
-        {
-            "type": "Stop",
-            "name": "Morskoy Vokzal",
-            "latitude": 43.581969,
-            "longitude": 39.719848,
-            "road_distances": {
-                "Riviera Bridge": 850
-            }
-        }
-    ]
-}
 
 
 ## Step 3: Automatic Serialization and Deserialization with Protocol Buffers
@@ -144,15 +80,6 @@ The Transport Catalogue is a comprehensive digital repository designed to manage
 
 **Example Responses to Requests:**
 
-*Responses to different types of requests, including bus details, stop information, route data, and rendered maps in SVG format, are automatically generated and provided by the Transport Catalogue program.*
-
-By following these steps, users can efficiently manage and interact with transportation data by creating a JSON file with the transport database in the specified format. The Transport Catalogue program leverages Protocol Buffers (protobuf) to simplify data serialization and deserialization, optimizing the performance of the system.
-
-1. Инициализация поискового сервера происходит с использованием стоп-слов.
-2. Добавление документов в сервер.
-3. Формирование очереди запросов.
-4. Вывод результатов.
-5. Тесты помогут более подробно разобраться с возможностями данного поискового сервера.
 # Cистемные требования
 1. C++17
 2. Любой из следующих компиляторов: GCC,MSVC,CLANG.
