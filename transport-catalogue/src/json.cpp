@@ -46,7 +46,7 @@ Node LoadNumber(std::istream& input) {
     
     std::string parsed_num;
 
-    // Считывает в parsed_num очередной символ из input
+    // Read symbol to parsed_num from input
     auto read_char = [&parsed_num, &input] {
         parsed_num += static_cast<char>(input.get());
         if (!input) {
@@ -54,7 +54,7 @@ Node LoadNumber(std::istream& input) {
         }
     };
 
-    // Считывает одну или более цифр в parsed_num из input
+    // Read one or more digits to parsed_num from input
     auto read_digits = [&input, read_char] {
         if (!std::isdigit(input.peek())) {
             throw ParsingError("A digit is expected"s);
@@ -67,23 +67,23 @@ Node LoadNumber(std::istream& input) {
     if (input.peek() == '-') {
         read_char();
     }
-    // Парсим целую часть числа
+    // Parse integer part of a number
     if (input.peek() == '0') {
         read_char();
-        // После 0 в JSON не могут идти другие цифры
+        // In JSON, digits cannot follow a leading zero.
     } else {
         read_digits();
     }
 
     bool is_int = true;
-    // Парсим дробную часть числа
+    // Parsing the fractional part of the number.
     if (input.peek() == '.') {
         read_char();
         read_digits();
         is_int = false;
     }
 
-    // Парсим экспоненциальную часть числа
+    // Parsing the exponential part of the number.
     if (int ch = input.peek(); ch == 'e' || ch == 'E') {
         read_char();
         if (ch = input.peek(); ch == '+' || ch == '-') {
@@ -95,12 +95,12 @@ Node LoadNumber(std::istream& input) {
 
     try {
         if (is_int) {
-            // Сначала пробуем преобразовать строку в int
+            // First, we try to convert the string to an integer.
             try {
                 return Node{std::stoi(parsed_num)};
             } catch (...) {
-                // В случае неудачи, например, при переполнении,
-                // код ниже попробует преобразовать строку в double
+                // In case of failure, for example, due to overflow, 
+                // the code below will attempt to convert the string to a double.
             }
         }
         return Node{std::stod(parsed_num)};
@@ -109,8 +109,8 @@ Node LoadNumber(std::istream& input) {
     }
 }
 
-// Считывает содержимое строкового литерала JSON-документа
-// Функцию следует использовать после считывания открывающего символа ":
+// Reads the contents of a JSON document's string literal. 
+// This function should be used after reading the opening double quotation mark ":
 Node LoadString(std::istream& input) {
     using namespace std::literals;
     
@@ -119,23 +119,23 @@ Node LoadString(std::istream& input) {
     std::string s;
     while (true) {
         if (it == end) {
-            // Поток закончился до того, как встретили закрывающую кавычку?
+            // The stream ended before encountering the closing double quotation mark?
             throw ParsingError("String parsing error");
         }
         const char ch = *it;
         if (ch == '"') {
-            // Встретили закрывающую кавычку
+            // We encountered the closing double quotation mark.
             ++it;
             break;
         } else if (ch == '\\') {
-            // Встретили начало escape-последовательности
+            // We encountered the beginning of an escape sequence.
             ++it;
             if (it == end) {
-                // Поток завершился сразу после символа обратной косой черты
+                // The stream ended immediately after the backslash character.
                 throw ParsingError("String parsing error");
             }
             const char escaped_char = *(it);
-            // Обрабатываем одну из последовательностей: \\, \n, \t, \r, \"
+            // We are processing one of the sequences: \, \n, \t, \r, ".
             switch (escaped_char) {
                 case 'n':
                     s.push_back('\n');
@@ -153,14 +153,14 @@ Node LoadString(std::istream& input) {
                     s.push_back('\\');
                     break;
                 default:
-                    // Встретили неизвестную escape-последовательность
+                    // We encountered an unknown escape sequence.
                     throw ParsingError("Unrecognized escape sequence \\"s + escaped_char);
             }
         } else if (ch == '\n' || ch == '\r') {
-            // Строковый литерал внутри- JSON не может прерываться символами \r или \n
+            // A string literal inside JSON cannot be interrupted by the characters \r or \n.
             throw ParsingError("Unexpected end of line"s);
         } else {
-            // Просто считываем очередной символ и помещаем его в результирующую строку
+            // Simply read the next character and append it to the resulting string.
             s.push_back(ch);
         }
         ++it;
@@ -176,16 +176,6 @@ Node LoadArray(istream& input) {
             input.putback(c);
         }
         result.push_back(LoadNode(input));
-    //if(input >> c){
-    //    if(c == ']'){
-    //        return Node(move(result));
-    //    }
-    //    if(c != ','){
-    //        throw ParsingError("absence of comma"s);
-    //    }
-    //}else{
-    //    throw ParsingError("Array parsing error");
-    //}
     }
     
     if((c!=']' && result.empty())){
@@ -387,10 +377,10 @@ void PrintValue<std::nullptr_t>(const std::nullptr_t&, const PrintContext& ctx) 
     ctx.out << "null"sv;
 }
 
-// В специализаци шаблона PrintValue для типа bool параметр value передаётся
-// по константной ссылке, как и в основном шаблоне.
-// В качестве альтернативы можно использовать перегрузку:
-// void PrintValue(bool value, const PrintContext& ctx);
+// In the template specialization for the type bool, 
+// the parameter value is passed by constant reference, just like in the main template. 
+// Alternatively, you can use an overload: 
+// void PrintValue(bool value, const PrintContext& ctx);.
 template <>
 void PrintValue<bool>(const bool& value, const PrintContext& ctx) {
     ctx.out << (value ? "true"sv : "false"sv);
