@@ -13,7 +13,6 @@ class Node;
 using Dict = std::map<std::string, Node>;
 using Array = std::vector<Node>;
 
-// Эта ошибка должна выбрасываться при ошибках парсинга JSON
 class ParsingError : public std::runtime_error {
 public:
     using runtime_error::runtime_error;
