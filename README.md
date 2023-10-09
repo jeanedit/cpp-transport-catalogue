@@ -70,16 +70,16 @@ The Transport Catalogue is a comprehensive digital repository designed to manage
 1. The "make_base" step involves running the following command to automatically read the provided JSON file, serialize the data into binary protobuf format using Protobuf 3, and create the Transport Catalogue database:
 
    ```shell
-   ./transport_catalogue -m make_base -c path/to/base.json
+   ./transport_catalogue make_base < path/to/transport_database.json
    ```
-2. This step creates the transport directory database based on base_requests and serializes it to a file.
+2. This step creates the transport catalogue database based on base_requests and serializes it to a file.
    
 ## Step 4: Process Requests
 
 1. After the base is established, you can process statistical requests. These requests can include queries about buses, stops, routes, and maps. The Transport Catalogue responds to these requests using the pre-built database, providing valuable information and insights.
 
    ```shell
-   ./transport_catalogue -m process_requests -c path/to/stat.json
+   ./transport_catalogue process_requests < path/to/stat_requests.json
    ```
 2. This step deserializes the database from a file and uses it to respond to stat_requests.
 
