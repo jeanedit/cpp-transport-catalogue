@@ -6,10 +6,6 @@
 using namespace std::literals;
 using namespace svg;
 
-/*
-Пример использования библиотеки. Он будет компилироваться и работать, когда вы реализуете
-все классы библиотеки.
-*/
 
 namespace {
 
@@ -27,7 +23,6 @@ namespace {
         return polyline;
     }
 
-    //Выводит приветствие, круг и звезду
     void DrawPicture() {
         Document doc;
         doc.Add(Circle().SetCenter({ 20, 20 }).SetRadius(10));
