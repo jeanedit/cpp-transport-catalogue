@@ -45,8 +45,8 @@ std::ostream& operator<< (std::ostream& out, const StrokeLineJoin line_join){
 }
 void Object::Render(const RenderContext& context) const {
     context.RenderIndent();
-
-    // Делегируем вывод тега своим подклассам
+    
+    // Delegate the rendering of the tag to our subclasses.
     RenderObject(context);
 
     context.out << std::endl;
@@ -73,7 +73,7 @@ void Circle::RenderObject(const RenderContext& context) const {
 }
 
 // ---------- Polyline ------------------
-    // Добавляет очередную вершину к ломаной линии
+// Adds the next vertex to the polyline.
 Polyline& Polyline::AddPoint(Point point){
     points_.push_back(point);
     return *this;
@@ -95,37 +95,37 @@ void Polyline::RenderObject(const RenderContext& context) const {
 }
 
 // ---------- Text ------------------
-// Задаёт координаты опорной точки (атрибуты x и y)
+// Sets the coordinates of the anchor point (attributes x and y).
 Text& Text::SetPosition(Point pos){
     pos_ = pos;
     return *this;
 }
 
-// Задаёт смещение относительно опорной точки (атрибуты dx, dy)
+// Sets the offset relative to the anchor point (attributes dx and dy).
 Text& Text::SetOffset(Point offset){
     offset_ = offset;
     return *this;
 }
 
-// Задаёт размеры шрифта (атрибут font-size)
+// Sets the font size (attribute font-size).
 Text& Text::SetFontSize(uint32_t size){
     size_ = size;
     return *this;
 }
 
-// Задаёт название шрифта (атрибут font-family)
+// Sets the font name (attribute font-family).
 Text& Text::SetFontFamily(std::string font_family){
     font_family_ = std::move(font_family);
     return *this;
 }
 
-// Задаёт толщину шрифта (атрибут font-weight)
+// Sets the font thickness (attribute font-weight).
 Text& Text::SetFontWeight(std::string font_weight){
     font_weight_ = std::move(font_weight);
     return *this;
 }
 
-// Задаёт текстовое содержимое объекта (отображается внутри тега text)
+// Sets the text content of the object (displayed inside the <text> tag).
 Text& Text::SetData(const std::string& data){
     data_.reserve(data.size() + 5*symb_to_shield_.size());
     for(const char c:data){
@@ -158,12 +158,12 @@ void Text::RenderObject(const RenderContext& context) const{
 }
     
 // ---------- Document ------------------
-// Добавляет в svg-документ объект-наследник svg::Object
+// Adds an SVG object, which is a descendant of svg::Object, to the SVG document.
 void Document::AddPtr(std::unique_ptr<Object>&& obj){
     objects_.push_back(std::move(obj));
 }
 
-// Выводит в ostream svg-представление документа
+// Outputs the SVG representation of the document to an ostream.
 void Document::Render(std::ostream& out) const{
     RenderContext ctx(out,2,2);
     out << "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>"sv << std::endl;
