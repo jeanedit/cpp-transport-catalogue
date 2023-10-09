@@ -85,8 +85,8 @@ struct Point {
 };
 
 /*
- * Вспомогательная структура, хранящая контекст для вывода SVG-документа с отступами.
- * Хранит ссылку на поток вывода, текущее значение и шаг отступа при выводе элемента
+* It's an auxiliary structure that stores context for rendering an SVG document with indentation. 
+* It contains a reference to the output stream, the current indentation level, and the indentation step when rendering an element.
  */
 struct RenderContext {
     RenderContext(std::ostream& out)
@@ -118,9 +118,8 @@ struct RenderContext {
 
    
 /*
- * Абстрактный базовый класс Object служит для унифицированного хранения
- * конкретных тегов SVG-документа
- * Реализует паттерн "Шаблонный метод" для вывода содержимого тега
+* The abstract base class Object serves as a unified way to store specific SVG document tags 
+* and implements the "Template Method" pattern for rendering the content of a tag.
  */
       
 class Object {
@@ -184,8 +183,8 @@ protected:
 
 private:
     Owner& AsOwner() {
-        // static_cast безопасно преобразует *this к Owner&,
-        // если класс Owner — наследник PathProps
+        // The static_cast safely converts *this to Owner& if the class Owner is derived from the class PathProps, 
+        // or if they have a suitable relationship in the inheritance hierarchy
         return static_cast<Owner&>(*this);
     }
 
@@ -215,8 +214,8 @@ class Drawable{
     
     
 /*
- * Класс Circle моделирует элемент <circle> для отображения круга
- * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/circle
+* The Circle class models an <circle> element for displaying a circle in SVG.
+* https://developer.mozilla.org/en-US/docs/Web/SVG/Element/circle.
  */
 class Circle final : public Object,public PathProps<Circle> {
 public:
@@ -232,12 +231,12 @@ private:
 };
 
 /*
- * Класс Polyline моделирует элемент <polyline> для отображения ломаных линий
- * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/polyline
+* The Polyline class models an <polyline> element for displaying polyline or line segments in SVG.
+* https://developer.mozilla.org/en-US/docs/Web/SVG/Element/polyline.
  */
 class Polyline final:public Object,public PathProps<Polyline> {
 public:
-    // Добавляет очередную вершину к ломаной линии
+    // Adds the next vertex to the polyline.
     Polyline& AddPoint(Point point);
 
 private:
@@ -246,31 +245,31 @@ private:
 };
 
 /*
- * Класс Text моделирует элемент <text> для отображения текста
+ * The Text class models an <text> element for displaying text.
  * https://developer.mozilla.org/en-US/docs/Web/SVG/Element/text
  */
 class Text final:public Object,public PathProps<Text> { 
 public:
     Text() = default;
-    // Задаёт координаты опорной точки (атрибуты x и y)
+    // Sets the coordinates of the anchor point (attributes x and y).
     Text& SetPosition(Point pos);
 
-    // Задаёт смещение относительно опорной точки (атрибуты dx, dy)
+    // Sets the offset relative to the anchor point (attributes dx and dy).
     Text& SetOffset(Point offset);
 
-    // Задаёт размеры шрифта (атрибут font-size)
+    // Sets the font size (attribute font-size).
     Text& SetFontSize(uint32_t size);
 
-    // Задаёт название шрифта (атрибут font-family)
+    // Sets the font name (attribute font-family).
     Text& SetFontFamily(std::string font_family);
 
-    // Задаёт толщину шрифта (атрибут font-weight)
+    // Sets the font thickness (attribute font-weight).
     Text& SetFontWeight(std::string font_weight);
 
-    // Задаёт текстовое содержимое объекта (отображается внутри тега text)
+    // Sets the text content of the object (displayed inside the <text> tag).
     Text& SetData(const std::string& data);
 
-    // Прочие данные и методы, необходимые для реализации элемента <text>
+    // Other data and methods necessary for implementing the <text> element.
     private:
         void RenderObject(const RenderContext& context) const override;
         Point pos_ = {0.0, 0.0};
@@ -286,18 +285,18 @@ public:
 class Document:public ObjectContainer{
 public:
     /*
-     Метод Add добавляет в svg-документ любой объект-наследник svg::Object.
-     Пример использования:
+     The Add method adds any object that inherits from svg::Object to the SVG document. 
+     Here's an example of how to use it:
      Document doc;
      doc.Add(Circle().SetCenter({20, 30}).SetRadius(15));
     */
     // void Add(???);
     Document() = default;
 
-    // Добавляет в svg-документ объект-наследник svg::Object
+    // The Add method adds an object that is a descendant of svg::Object to the SVG document.
     void AddPtr(std::unique_ptr<Object>&& obj) override;
 
-    // Выводит в ostream svg-представление документа
+    // The ostream is used to output the SVG representation of the document.
     void Render(std::ostream& out) const;
     private:
         std::vector<std::unique_ptr<Object>> objects_;
