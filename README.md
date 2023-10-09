@@ -26,7 +26,7 @@ The Transport Catalogue is a comprehensive digital repository designed to manage
    experience.
 
 # Usage
-# Step 1: Build the Project
+## Step 1: Build the Project
 1. Инициализация поискового сервера происходит с использованием стоп-слов.
 2. Добавление документов в сервер.
 3. Формирование очереди запросов.
