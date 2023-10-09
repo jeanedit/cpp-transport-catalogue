@@ -27,17 +27,19 @@ The Transport Catalogue is a comprehensive digital repository designed to manage
 
 # Transport Catalogue User Guide
 
-## Step 1: Build the Project**
+## Step 1: Build the Project using CMake, protobuf 3, and Prepare JSON Data**
 
 1. Ensure that you have CMake and a C++17 compatible compiler installed on your system.
 
-2. Clone or download the Transport Catalogue project from its source repository.
+2. Ensure that you have protobuf 3 installed on your system.
 
-3. Navigate to the project directory and create a build directory (e.g., `build`) inside it.
+3. Clone or download the Transport Catalogue project from its source repository.
 
-4. Open a terminal or command prompt and navigate to the build directory.
+4. Navigate to the project directory and create a build directory (e.g., `build`) inside it.
 
-5. Run the CMake command to generate the build files. Specify the protobuf directory using `-DProtobuf_DIR=<protobuf_directory>`. For example:
+5. Open a terminal or command prompt and navigate to the build directory.
+
+6. Run the CMake command to generate the build files. Specify the protobuf directory using `-DProtobuf_DIR=<protobuf_directory>`. For example:
 
    ```
    cmake -DCMAKE_PREFIX_PATH=<protobuf_directory> ..
@@ -45,11 +47,11 @@ The Transport Catalogue is a comprehensive digital repository designed to manage
 
    Replace `<protobuf_directory>` with the actual path to the directory where protobuf is installed on your system.
 
-6. Build the project using `make` (on Linux) or `cmake --build .` (on Windows).
+7. Build the project using `make` (on Linux) or `cmake --build .` (on Windows).
 
 ## Step 2: Prepare JSON Data
 
-1. Create a JSON file that contains your transportation data, following the expected JSON format specified by the Transport Catalogue. Your JSON file should include the following sections:
+1. Create JSON files that contain required data following the expected JSON format specified by the Transport Catalogue. Your JSON file should include the following sections:
 
    - `serialization_settings`: Specify the file where the catalogue should serialize its data.
 
@@ -58,31 +60,40 @@ The Transport Catalogue is a comprehensive digital repository designed to manage
    - `render_settings`: Configure rendering settings, including the width, height, padding, and appearance of the rendered map.
 
    - `base_requests`: Add transportation data, including buses and stops, in the desired format.
+     
+   - `stat_requests` : Include statistical requests for information about buses, stops, routes, and maps. This setting is used in the "process_requests" stage to retrieve statistical data.
 
+2. You can find more example JSON files in the "json_example" folder within the Transport Catalogue project. These examples can help you understand the expected format and structure for your JSON data.
 
-## Step 3: Automatic Serialization and Deserialization with Protocol Buffers
+## Step 3: Make Base
 
-1. The Transport Catalogue program relies on Protocol Buffers (protobuf) for automatic data serialization and deserialization.
+1. The "make_base" step involves running the following command to automatically read the provided JSON file, serialize the data into binary protobuf format using Protobuf 3, and create the Transport Catalogue database:
 
-2. During the build process, CMake should be configured with the location of the protobuf installation directory using `-DProtobuf_DIR=<protobuf_directory>`.
-
-3. The "make_base" stage automatically reads the provided JSON file, serializes the data into binary protobuf format using Protobuf 3, and creates the Transport Catalogue database.
+   ```shell
+   ./transport_catalogue -m make_base -c path/to/base.json
+   ```
+2. This step creates the transport directory database based on base_requests and serializes it to a file.
    
-4. The "process_requests" stage processes incoming JSON requests and provides responses based on the data that has been automatically deserialized from the JSON file. The Transport Catalogue program handles this deserialization process for you.
+## Step 4: Process Requests
 
-## Step 4: Response to Requests
+1. After the base is established, you can process statistical requests. These requests can include queries about buses, stops, routes, and maps. The Transport Catalogue responds to these requests using the pre-built database, providing valuable information and insights.
 
-1. Configure the Transport Catalogue to handle various types of JSON-based requests, such as querying bus details, stop information, finding routes, and generating maps in SVG format.
+   ```shell
+   ./transport_catalogue -m process_requests -c path/to/stat.json
+   ```
+2. This step deserializes the database from a file and uses it to respond to stat_requests.
 
-2. Define the types of requests you want to support, and specify them in your JSON request file.
+*Responses to different types of requests, including bus details, stop information, route data, and rendered maps in SVG format, are automatically generated and provided by the Transport Catalogue program.*
 
-3. Process incoming JSON requests and provide responses based on the data that has been automatically deserialized from the JSON file. The Transport Catalogue program handles this deserialization process for you.
+# System requirements
+1. CMake 3.18
+2. Any of the following compilers: GCC, Clang or MSVC.
+3. Protobuf 3
+# Development plans:
+1. Create a user interface for more convenient interaction with the program.
+   
+2. Render maps using more advanced technologies, such as OpenGL.
+   
+3. Support new formats in addition to JSON.
 
-**Example Responses to Requests:**
-
-# Cистемные требования
-1. C++17
-2. Любой из следующих компиляторов: GCC,MSVC,CLANG.
-# Планы по доработке:
-1. Возможность добавления документов с помощью файла.
-2. Графический интерфейс для удобной работы с сервером.
+4. Add rendering in a more convenient format, not just in SVG.
