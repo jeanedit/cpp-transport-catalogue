@@ -21,8 +21,6 @@ namespace tr_catalogue {
 
 		TransportCatalogue() = default;
 
-		// r-value reference òàê êàê íàäî ïåðåíåñòè òÿæåëûé îáúåêò, êîòîðûé îáðàçîâàëñÿ ïðè ñ÷èòûâàíèè äàííûõ
-		// Ëèáî íóæíî îñòàâëÿòü const Stop& stop, íî òîãäà áóäåò ïðîèñõîäèòü êîïèðîâàíèå îáúåêòà, êîòîðûé íå íóæåí âíå ñïðàâî÷íèêà
 		void AddStop(domain::Stop&& stop);
 
 		const domain::Stop* FindStop(std::string_view stop_name) const;
