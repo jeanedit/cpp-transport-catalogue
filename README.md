@@ -86,9 +86,9 @@ The Transport Catalogue is a comprehensive digital repository designed to manage
 *Responses to different types of requests, including bus details, stop information, route data, and rendered maps in SVG format, are automatically generated and provided by the Transport Catalogue program.*
 
 # System requirements
-1. CMake 3.18
-2. Any of the following compilers: GCC, Clang or MSVC.
-3. Protobuf 3
+1. **CMake**: CMake is used to build the project. You can download it from [CMake's official website](https://cmake.org/download/).
+2. **C++ Compiler**: You need a C++ compiler that supports C++17 or higher. If you're using Linux, you likely have `g++` installed. On Windows, you can use MinGW or Visual Studio's C++ compiler.
+3. **Protobuf**: The project uses protobuf 3 for serializing and deserializing data. You can download protobuf from [protobuf official website](https://protobuf.dev/).
 # Development plans:
 1. Create a user interface for more convenient interaction with the program. 
 2. Render maps using more advanced technologies, such as OpenGL.
