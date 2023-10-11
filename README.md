@@ -27,7 +27,7 @@ The Transport Catalogue is a comprehensive digital repository designed to manage
 
 # Transport Catalogue User Guide
 
-## Step 1: Build the Project using CMake, protobuf 3, and Prepare JSON Data**
+### Build the Project using CMake and protobuf 3**
 
 1. Ensure that you have CMake and a C++17 compatible compiler installed on your system.
 
@@ -49,7 +49,7 @@ The Transport Catalogue is a comprehensive digital repository designed to manage
 
 7. Build the project using `make` (on Linux) or `cmake --build .` (on Windows).
 
-## Step 2: Prepare JSON Data
+### Prepare JSON Data
 
 1. Create JSON files that contain required data following the expected JSON format specified by the Transport Catalogue. Your JSON file should include the following sections:
 
@@ -65,7 +65,7 @@ The Transport Catalogue is a comprehensive digital repository designed to manage
 
 2. You can find more example JSON files in the "json_example" folder within the Transport Catalogue project. These examples can help you understand the expected format and structure for your JSON data.
 
-## Step 3: Make Base
+### Make Base
 
 1. The "make_base" step involves running the following command to automatically read the provided JSON file, serialize the data into binary protobuf format using Protobuf 3, and create the Transport Catalogue database:
 
@@ -74,7 +74,7 @@ The Transport Catalogue is a comprehensive digital repository designed to manage
    ```
 2. This step creates the transport catalogue database based on base_requests and serializes it to a file.
    
-## Step 4: Process Requests
+### Process Requests
 
 1. After the base is established, you can process statistical requests. These requests can include queries about buses, stops, routes, and maps. The Transport Catalogue responds to these requests using the pre-built database, providing valuable information and insights.
 
