@@ -1,6 +1,6 @@
 # Transport Catalogue
 Implementation of the transport catalogue that stores a database of bus stops and buses with their routes, supports SVG rendering, calculates optimal routes between stops, and provides information about stops, routes, SVG maps, and optimal routes upon request.
-# Descripiton
+# Description
 The Transport Catalogue is a comprehensive digital repository designed to manage and provide access to essential information related to transportation services, particularly bus routes and stops. This catalogue serves as a centralized hub for storing, organizing, and retrieving data pertinent to the transport network. Key features and functionalities of the Transport Catalogue include:
 
 1. Bus Stop Database: The catalogue maintains an extensive database of bus stops, each with detailed information such as location coordinates, stop names, and unique identifiers.
